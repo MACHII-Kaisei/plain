@@ -12,6 +12,15 @@ struct ListCommand: ParsableCommand {
     @Argument(help: "フィルタ: today, tomorrow, overdue, done（省略で未完了すべて）")
     var filter: String?
 
+    @Option(name: .long, help: "タグで絞り込み（複数指定可）")
+    var tag: [String] = []
+
+    @Option(name: .shortAndLong, help: "優先度で絞り込み: high(h), medium(m), low(l)")
+    var priority: String?
+
+    @Option(name: .shortAndLong, help: "並び替え: dueDate, priority, createdAt, title")
+    var sort: String?
+
     @Flag(name: .shortAndLong, help: "JSON形式で出力")
     var json: Bool = false
 
@@ -52,10 +61,44 @@ struct ListCommand: ParsableCommand {
         } else if filterSection != nil {
             let sorted = filterSection == .completed
                 ? filtered
-                : filtered.sorted(by: TodoItemSort.compareActive)
+                : applySortAndFilter(filtered)
             printTable(sorted)
         } else {
-            printGrouped(filtered)
+            let sorted = applySortAndFilter(filtered)
+            printGroupedOrTable(sorted)
+        }
+    }
+
+    private func applySortAndFilter(_ items: [TodoItem]) -> [TodoItem] {
+        var result = items
+
+        // Filter by priority
+        if let priority, let pri = PriorityParser.parse(priority) {
+            result = result.filter { $0.priority == pri }
+        }
+
+        // Filter by tag
+        if !tag.isEmpty {
+            result = result.filter { item in
+                item.tags.contains(where: { tag.contains($0.name) })
+            }
+        }
+
+        // Sort
+        if let sort, let sortOrder = TaskSortOrder(rawValue: sort) {
+            result = result.sorted(by: TodoItemSort.comparator(for: sortOrder))
+        } else {
+            result = result.sorted(by: TodoItemSort.compareActive)
+        }
+
+        return result
+    }
+
+    private func printGroupedOrTable(_ items: [TodoItem]) {
+        if filter == nil && tag.isEmpty && priority == nil {
+            printGrouped(items)
+        } else {
+            printTable(items)
         }
     }
 

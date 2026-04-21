@@ -12,6 +12,8 @@ struct PlainCLI: ParsableCommand {
             UndoneCommand.self,
             EditCommand.self,
             DeleteCommand.self,
+            TagCommand.self,
         ]
     )
 }
+

@@ -32,7 +32,7 @@ struct NotificationSchedulerTests {
         let dueDate = Calendar.current.date(
             from: DateComponents(year: 2099, month: 1, day: 1, hour: 14, minute: 30)
         )!
-        let item = TodoItem(title: "X", dueDate: dueDate)
+        let item = TodoItem(title: "X", dueDate: dueDate, hasDueTime: true)
 
         await scheduler.schedule(for: item, leadMinutes: 0)
 
@@ -68,7 +68,7 @@ struct NotificationSchedulerTests {
         let dueDate = Calendar.current.date(
             from: DateComponents(year: 2099, month: 1, day: 1, hour: 14, minute: 30)
         )!
-        let item = TodoItem(title: "Lead test", dueDate: dueDate)
+        let item = TodoItem(title: "Lead test", dueDate: dueDate, hasDueTime: true)
 
         await scheduler.schedule(for: item, leadMinutes: 30)
 

@@ -23,6 +23,9 @@ public final class NotificationScheduler {
 
     /// `leadMinutes` 分前に通知をスケジュールする。
     /// デフォルト値は UserDefaults の "notificationLeadMinutes"（未設定時は 0 = ちょうど）。
+    ///
+    /// `hasDueTime == false` の場合: dueDate は startOfDay（00:00）なので、
+    /// 代わりに当日 09:00 を基準時刻として通知をスケジュールする。
     public func schedule(
         for item: TodoItem,
         leadMinutes: Int = UserDefaults.standard.integer(forKey: "notificationLeadMinutes")
@@ -33,7 +36,18 @@ public final class NotificationScheduler {
         }
         guard let due = item.dueDate else { return }
 
-        let notifyAt = due.addingTimeInterval(-Double(leadMinutes) * 60)
+        let basetime: Date
+        if item.hasDueTime {
+            // 時刻が設定されている場合: そのまま使用
+            basetime = due
+        } else {
+            // 時刻未設定の場合: 当日 09:00 を基準にする
+            let cal = Calendar.current
+            let startOfDay = cal.startOfDay(for: due)
+            basetime = cal.date(byAdding: .hour, value: 9, to: startOfDay) ?? due
+        }
+
+        let notifyAt = basetime.addingTimeInterval(-Double(leadMinutes) * 60)
 
         guard notifyAt > Date() else {
             center.removePendingNotificationRequests(withIdentifiers: [item.id.uuidString])

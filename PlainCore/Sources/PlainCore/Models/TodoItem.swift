@@ -14,13 +14,16 @@ public final class TodoItem {
     public var notes: String?
     public var urlString: String?
     public var notificationEnabled: Bool = true
+    public var tags: [Tag] = []
+    public var hasDueTime: Bool = false
 
     public init(title: String,
                 priority: Priority = .medium,
                 dueDate: Date? = nil,
                 notes: String? = nil,
                 urlString: String? = nil,
-                notificationEnabled: Bool = true) {
+                notificationEnabled: Bool = true,
+                hasDueTime: Bool = false) {
         self.id = UUID()
         self.title = title
         self.priority = priority
@@ -32,5 +35,7 @@ public final class TodoItem {
         self.notes = notes
         self.urlString = urlString
         self.notificationEnabled = notificationEnabled
+        self.tags = []
+        self.hasDueTime = hasDueTime
     }
 }
