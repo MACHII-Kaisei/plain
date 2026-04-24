@@ -27,8 +27,8 @@ struct AddCommand: ParsableCommand {
     @Option(name: .shortAndLong, help: "参照URL")
     var url: String?
 
-    @Flag(name: .long, help: "通知を無効化")
-    var noNotify: Bool = false
+    @Option(name: .long, help: "タグ名（複数指定可）")
+    var tag: [String] = []
 
     func run() throws {
         let container = try ContainerProvider.shared()
@@ -43,8 +43,24 @@ struct AddCommand: ParsableCommand {
             dueDate: dueDate,
             notes: note,
             urlString: url,
-            notificationEnabled: !noNotify
+            hasDueTime: at != nil
         )
+
+        // Resolve tags
+        if !tag.isEmpty {
+            let tagDescriptor = FetchDescriptor<Tag>()
+            let allTags = (try? context.fetch(tagDescriptor)) ?? []
+            for tagName in tag {
+                if let existing = allTags.first(where: { $0.name == tagName }) {
+                    item.tags.append(existing)
+                } else {
+                    let newTag = Tag(name: tagName, colorIndex: 5)
+                    context.insert(newTag)
+                    item.tags.append(newTag)
+                }
+            }
+        }
+
         context.insert(item)
         try context.save()
 
@@ -54,6 +70,9 @@ struct AddCommand: ParsableCommand {
             print("  期日: \(OutputFormatter.formatDate(dueDate)) | 優先度: \(PriorityParser.label(pri))")
         } else {
             print("  優先度: \(PriorityParser.label(pri))")
+        }
+        if !tag.isEmpty {
+            print("  タグ: \(tag.joined(separator: ", "))")
         }
 
         WidgetReloader.reload()

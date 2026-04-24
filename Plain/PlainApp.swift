@@ -10,6 +10,7 @@ extension Notification.Name {
     static let plainEditSelected = Notification.Name("plainEditSelected")
     static let plainDuplicateSelected = Notification.Name("plainDuplicateSelected")
     static let plainDeleteSelected = Notification.Name("plainDeleteSelected")
+    static let plainSaveError = Notification.Name("plainSaveError")
 }
 
 @main
@@ -43,13 +44,6 @@ struct PlainApp: App {
                             WidgetCenter.shared.reloadAllTimelines()
                         }
                     }
-                }
-                .task {
-                    // XCUITest 実行中は通知権限要求をスキップ
-                    guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
-                    guard UserDefaults.standard.bool(forKey: "notificationsRequested") == false else { return }
-                    await NotificationScheduler().requestAuthorizationIfNeeded()
-                    UserDefaults.standard.set(true, forKey: "notificationsRequested")
                 }
         }
         .modelContainer(container)

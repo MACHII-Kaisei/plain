@@ -35,18 +35,16 @@ struct TodoStoreTests {
     }
 
     @Test @MainActor
-    func addStoresNotesAndURLAndNotificationFlag() throws {
+    func addStoresNotesAndURL() throws {
         let container = try SharedContainer.makeInMemoryContainer()
         let store = TodoStore(container: container)
 
         let item = store.add(title: "E",
                              notes: "メモ内容",
-                             urlString: "https://example.com",
-                             notificationEnabled: false)
+                             urlString: "https://example.com")
 
         #expect(item.notes == "メモ内容")
         #expect(item.urlString == "https://example.com")
-        #expect(item.notificationEnabled == false)
     }
 
     @Test @MainActor

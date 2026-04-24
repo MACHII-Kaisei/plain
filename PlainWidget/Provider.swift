@@ -16,6 +16,7 @@ extension TodoItem {
         let priority: Priority
         let dueDate: Date?
         let isCompleted: Bool
+        let hasDueTime: Bool
     }
 
     var snapshot: Snapshot {
@@ -24,7 +25,8 @@ extension TodoItem {
             title: title,
             priority: priority,
             dueDate: dueDate,
-            isCompleted: isCompleted
+            isCompleted: isCompleted,
+            hasDueTime: hasDueTime
         )
     }
 }
@@ -89,7 +91,8 @@ struct Provider: TimelineProvider {
                 title: "サンプル\($0 + 1)",
                 priority: .medium,
                 dueDate: Date(),
-                isCompleted: false
+                isCompleted: false,
+                hasDueTime: false
             )
         }
     }

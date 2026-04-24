@@ -102,7 +102,7 @@ struct TodayWidgetView: View {
                 }
 
                 HStack(spacing: 8) {
-                    if let due = item.dueDate {
+                    if let due = item.dueDate, item.hasDueTime {
                         HStack(spacing: 4) {
                             Image(systemName: "clock")
                                 .font(.system(size: 10))
