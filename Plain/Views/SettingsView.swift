@@ -1,32 +1,24 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("notificationsEnabled") private var notificationsEnabled: Bool = true
-    @AppStorage("notificationLeadMinutes") private var leadMinutes: Int = 0
+    @AppStorage("completedRetentionDays") private var retentionDays: Int = 7
 
-    private let presets: [(minutes: Int, label: String)] = [
-        (0,    "ちょうど"),
-        (5,    "5分前"),
-        (10,   "10分前"),
-        (15,   "15分前"),
-        (30,   "30分前"),
-        (60,   "1時間前"),
-        (120,  "2時間前"),
-        (180,  "3時間前"),
-        (360,  "6時間前"),
-        (1440, "1日前"),
+    private let retentionPresets: [(days: Int, label: String)] = [
+        (3,   "3日間"),
+        (7,   "1週間"),
+        (14,  "2週間"),
+        (30,  "1ヶ月"),
+        (90,  "3ヶ月"),
     ]
 
     var body: some View {
         Form {
-            Section("通知") {
-                Toggle("期日通知を有効にする", isOn: $notificationsEnabled)
-                Picker("通知タイミング", selection: $leadMinutes) {
-                    ForEach(presets, id: \.minutes) { preset in
-                        Text(preset.label).tag(preset.minutes)
+            Section("表示") {
+                Picker("完了タスクの保持期間", selection: $retentionDays) {
+                    ForEach(retentionPresets, id: \.days) { preset in
+                        Text(preset.label).tag(preset.days)
                     }
                 }
-                .disabled(!notificationsEnabled)
             }
         }
         .formStyle(.grouped)

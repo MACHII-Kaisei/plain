@@ -20,7 +20,6 @@ struct TaskEditorView: View {
     @State private var minuteString: String = "00"
     @State private var showCalendar: Bool = false
     @State private var priority: Priority = .medium
-    @State private var notificationEnabled: Bool = true
     @State private var notes: String = ""
     @State private var urlString: String = ""
     @State private var selectedTagIDs: Set<UUID> = []
@@ -50,7 +49,6 @@ struct TaskEditorView: View {
                 priority = item.priority
                 notes = item.notes ?? ""
                 urlString = item.urlString ?? ""
-                notificationEnabled = item.notificationEnabled
                 hasDueDate = item.dueDate != nil
                 dueDate = item.dueDate ?? Self.todayStart()
                 hasDueTime = item.hasDueTime
@@ -307,7 +305,7 @@ struct TaskEditorView: View {
 
     private var dueDateSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionLabel("期日と通知")
+            sectionLabel("期日")
             VStack(spacing: 0) {
                 // Toggle row - due date
                 HStack {
@@ -412,23 +410,6 @@ struct TaskEditorView: View {
                     }
                 }
 
-                Divider().padding(.horizontal, 12)
-
-                // Notification toggle row
-                HStack {
-                    Image(systemName: "bell")
-                        .foregroundStyle(.secondary)
-                        .font(.callout)
-                    Text("通知")
-                        .font(.callout)
-                    Spacer()
-                    Toggle("", isOn: $notificationEnabled)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .disabled(!hasDueDate)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
             }
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -515,8 +496,9 @@ struct TaskEditorView: View {
         let notesForSave: String? = notesTrimmed.isEmpty ? nil : notesTrimmed
         let urlForSave: String? = urlTrimmed.isEmpty ? nil : urlTrimmed
 
-        // Resolve selected tags
-        let tagsForSave = allTags.filter { selectedTagIDs.contains($0.id) }
+        // Resolve selected tags from the latest store state.
+        // `@Query` updates can lag briefly while a sheet is open.
+        let tagsForSave = store.fetchAllTags().filter { selectedTagIDs.contains($0.id) }
 
         switch mode {
         case .new:
@@ -525,7 +507,6 @@ struct TaskEditorView: View {
                       dueDate: dueForSave,
                       notes: notesForSave,
                       urlString: urlForSave,
-                      notificationEnabled: notificationEnabled,
                       hasDueTime: hasDueTime,
                       tags: tagsForSave)
         case .edit(let item):
@@ -535,7 +516,6 @@ struct TaskEditorView: View {
                          dueDate: Optional(dueForSave),
                          notes: Optional(notesForSave),
                          urlString: Optional(urlForSave),
-                         notificationEnabled: notificationEnabled,
                          hasDueTime: hasDueTime,
                          tags: tagsForSave)
         }

@@ -10,5 +10,5 @@ func schemaVersionIsOne_zero_zero() {
 @Test
 func schemaContainsTodoItem() {
     #expect(PlainSchemaV1.models.count == 1)
-    #expect(ObjectIdentifier(PlainSchemaV1.models[0]) == ObjectIdentifier(TodoItem.self))
+    #expect(ObjectIdentifier(PlainSchemaV1.models[0]) == ObjectIdentifier(PlainSchemaV1.TodoItem.self))
 }

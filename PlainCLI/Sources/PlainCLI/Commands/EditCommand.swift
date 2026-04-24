@@ -33,11 +33,11 @@ struct EditCommand: ParsableCommand {
     @Option(name: .shortAndLong, help: "URLを変更")
     var url: String?
 
-    @Flag(name: .long, help: "通知を無効化")
-    var noNotify: Bool = false
+    @Option(name: .long, help: "タグを追加（複数指定可）")
+    var addTag: [String] = []
 
-    @Flag(name: .long, help: "通知を有効化")
-    var notify: Bool = false
+    @Option(name: .long, help: "タグを削除（複数指定可）")
+    var removeTag: [String] = []
 
     func run() throws {
         let container = try ContainerProvider.shared()
@@ -52,7 +52,6 @@ struct EditCommand: ParsableCommand {
             if let at {
                 item.dueDate = DateParser.parse(due: due, at: at)
             } else if let existingDue = item.dueDate {
-                // 日付だけ変更し、時刻は既存を維持
                 if let newDate = DateParser.parseDate(due) {
                     let cal = Calendar.current
                     let timeComps = cal.dateComponents([.hour, .minute], from: existingDue)
@@ -65,7 +64,6 @@ struct EditCommand: ParsableCommand {
                 item.dueDate = DateParser.parse(due: due, at: at)
             }
         } else if let at, let existingDue = item.dueDate {
-            // 時刻だけ変更
             item.dueDate = DateParser.applyTime(at, to: existingDue)
         }
 
@@ -74,13 +72,36 @@ struct EditCommand: ParsableCommand {
         }
         if let note { item.notes = note.isEmpty ? nil : note }
         if let url { item.urlString = url.isEmpty ? nil : url }
-        if noNotify { item.notificationEnabled = false }
-        if notify { item.notificationEnabled = true }
+
+        // Tag operations
+        if !addTag.isEmpty || !removeTag.isEmpty {
+            let tagDescriptor = FetchDescriptor<Tag>()
+            let allTags = (try? context.fetch(tagDescriptor)) ?? []
+
+            for tagName in addTag {
+                if let existing = allTags.first(where: { $0.name == tagName }) {
+                    if !item.tags.contains(where: { $0.id == existing.id }) {
+                        item.tags.append(existing)
+                    }
+                } else {
+                    let newTag = Tag(name: tagName, colorIndex: 5)
+                    context.insert(newTag)
+                    item.tags.append(newTag)
+                }
+            }
+
+            for tagName in removeTag {
+                item.tags.removeAll(where: { $0.name == tagName })
+            }
+        }
 
         item.updatedAt = Date()
         try context.save()
 
         print("✓ 更新: \(item.title) (\(OutputFormatter.shortID(item.id)))")
+        if !item.tags.isEmpty {
+            print("  タグ: \(item.tags.map(\.name).joined(separator: ", "))")
+        }
         WidgetReloader.reload()
     }
 }

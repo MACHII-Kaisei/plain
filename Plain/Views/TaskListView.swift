@@ -46,20 +46,6 @@ struct TaskListView: View {
                     Divider()
                 }
 
-                if isBulkMode {
-                    BulkActionBar(
-                        selectedItems: $bulkSelection,
-                        totalCount: 0,
-                        onSelectAll: { /* handled in MainListView */ },
-                        onTagAction: { _ in },
-                        onComplete: {},
-                        onDelete: {},
-                        onExit: { exitBulkMode() }
-                    )
-                    // Note: actual actions are handled in MainListView via notifications
-                    Divider()
-                }
-
                 MainListView(
                     sidebarSelection: sidebarSelection,
                     searchText: searchText,
@@ -185,6 +171,7 @@ private struct MainListView: View {
     @Query private var items: [TodoItem]
     @AppStorage("showNotesInRow") private var showNotesInRow: Bool = true
     @AppStorage("showTagsInRow") private var showTagsInRow: Bool = true
+    @Query(sort: \Tag.createdAt) private var allTags: [Tag]
 
     init(
         sidebarSelection: SidebarItem,
@@ -262,46 +249,92 @@ private struct MainListView: View {
         }
     }
 
+    private var selectedItems: [TodoItem] {
+        filteredItems.filter { bulkSelection.contains($0.id) }
+    }
+
     var body: some View {
-        Group {
-            if filteredItems.isEmpty && searchText.isEmpty && !filterState.hasActiveFilters {
-                if sidebarSelection == .completed {
-                    Text("完了したタスクはありません").foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            if isBulkMode {
+                BulkActionBar(
+                    selectedItems: $bulkSelection,
+                    totalCount: filteredItems.count,
+                    onSelectAll: {
+                        if bulkSelection.count == filteredItems.count {
+                            bulkSelection.removeAll()
+                        } else {
+                            bulkSelection = Set(filteredItems.map(\.id))
+                        }
+                    },
+                    onTagAction: { tag in
+                        store.batchAddTag(tag, to: selectedItems)
+                    },
+                    onComplete: {
+                        store.batchToggleComplete(selectedItems)
+                        exitBulkMode()
+                    },
+                    onDelete: {
+                        store.batchDelete(selectedItems)
+                        exitBulkMode()
+                    },
+                    onExit: { exitBulkMode() }
+                )
+                Divider()
+            }
+
+            Group {
+                if filteredItems.isEmpty && searchText.isEmpty && !filterState.hasActiveFilters {
+                    if sidebarSelection == .completed {
+                        Text("完了したタスクはありません").foregroundStyle(.secondary)
+                    } else {
+                        EmptyStateView(onAdd: onNew)
+                    }
+                } else if filteredItems.isEmpty {
+                    Text("該当するタスクはありません").foregroundStyle(.secondary)
                 } else {
-                    EmptyStateView(onAdd: onNew)
-                }
-            } else if filteredItems.isEmpty {
-                Text("該当するタスクはありません").foregroundStyle(.secondary)
-            } else {
-                List(selection: isBulkMode ? $bulkSelection : nil) {
-                    ForEach(filteredItems, id: \.id) { item in
-                        TaskRowView(
-                            item: item,
-                            showNotes: showNotesInRow,
-                            showTags: showTagsInRow,
-                            isBulkMode: isBulkMode,
-                            isSelected: bulkSelection.contains(item.id),
-                            onToggle: { store.toggleComplete(item) },
-                            onEdit: { onEdit(item) },
-                            onBulkToggle: {
-                                if bulkSelection.contains(item.id) {
-                                    bulkSelection.remove(item.id)
-                                } else {
-                                    bulkSelection.insert(item.id)
+                    List {
+                        ForEach(filteredItems, id: \.id) { item in
+                            TaskRowView(
+                                item: item,
+                                showNotes: showNotesInRow,
+                                showTags: showTagsInRow,
+                                isBulkMode: isBulkMode,
+                                isSelected: bulkSelection.contains(item.id),
+                                onToggle: { store.toggleComplete(item) },
+                                onEdit: { onEdit(item) },
+                                onBulkToggle: {
+                                    if bulkSelection.contains(item.id) {
+                                        bulkSelection.remove(item.id)
+                                    } else {
+                                        bulkSelection.insert(item.id)
+                                    }
+                                }
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if isBulkMode {
+                                    if bulkSelection.contains(item.id) {
+                                        bulkSelection.remove(item.id)
+                                    } else {
+                                        bulkSelection.insert(item.id)
+                                    }
                                 }
                             }
-                        )
                             .contextMenu {
                                 if isBulkMode {
-                                    Button("タグを追加...") { }
+                                    Menu("タグを追加") {
+                                        ForEach(allTags) { tag in
+                                            Button(tag.name) {
+                                                store.batchAddTag(tag, to: selectedItems)
+                                            }
+                                        }
+                                    }
                                     Button("完了にする") {
-                                        let selected = filteredItems.filter { bulkSelection.contains($0.id) }
-                                        store.batchToggleComplete(selected)
+                                        store.batchToggleComplete(selectedItems)
                                         exitBulkMode()
                                     }
                                     Button("削除（\(bulkSelection.count)件）", role: .destructive) {
-                                        let selected = filteredItems.filter { bulkSelection.contains($0.id) }
-                                        store.batchDelete(selected)
+                                        store.batchDelete(selectedItems)
                                         exitBulkMode()
                                     }
                                 } else {
@@ -312,6 +345,7 @@ private struct MainListView: View {
                                 }
                             }
                             .tag(item.id)
+                        }
                     }
                 }
             }

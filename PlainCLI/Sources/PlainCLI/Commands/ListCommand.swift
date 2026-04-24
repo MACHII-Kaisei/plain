@@ -113,7 +113,8 @@ struct ListCommand: ParsableCommand {
             let pri = PriorityParser.label(item.priority)
             let due = OutputFormatter.formatDate(item.dueDate)
             let title = item.title
-            print("  \(id)   \(pri)     \(due.padding(toLength: 12, withPad: " ", startingAt: 0))    \(title)")
+            let tagSuffix = item.tags.isEmpty ? "" : " [\(item.tags.map(\.name).joined(separator: ", "))]"
+            print("  \(id)   \(pri)     \(due.padding(toLength: 12, withPad: " ", startingAt: 0))    \(title)\(tagSuffix)")
         }
     }
 
@@ -150,7 +151,6 @@ struct ListCommand: ParsableCommand {
                 "title": item.title,
                 "priority": priorityString(item.priority),
                 "isCompleted": item.isCompleted,
-                "notificationEnabled": item.notificationEnabled,
                 "section": TaskClassifier.classify(item: item).rawValue,
             ]
             if let due = item.dueDate {

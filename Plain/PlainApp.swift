@@ -44,13 +44,6 @@ struct PlainApp: App {
                         }
                     }
                 }
-                .task {
-                    // XCUITest 実行中は通知権限要求をスキップ
-                    guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
-                    guard UserDefaults.standard.bool(forKey: "notificationsRequested") == false else { return }
-                    await NotificationScheduler().requestAuthorizationIfNeeded()
-                    UserDefaults.standard.set(true, forKey: "notificationsRequested")
-                }
         }
         .modelContainer(container)
         .commands {

@@ -27,22 +27,12 @@ func todoItemDueDatePreservesTimeOfDay() throws {
 }
 
 @Test
-func todoItemStoresNotesAndURLAndNotificationFlag() {
+func todoItemStoresNotesAndURL() {
     let item = TodoItem(title: "Y",
                         notes: "メモ",
-                        urlString: "https://example.com",
-                        notificationEnabled: false)
+                        urlString: "https://example.com")
     #expect(item.notes == "メモ")
     #expect(item.urlString == "https://example.com")
-    #expect(item.notificationEnabled == false)
-}
-
-@Test
-func todoItemDefaultsNotificationEnabledToTrue() {
-    let item = TodoItem(title: "Z")
-    #expect(item.notificationEnabled == true)
-    #expect(item.notes == nil)
-    #expect(item.urlString == nil)
 }
 
 @Test

@@ -7,31 +7,9 @@ import PlainCore
 public final class TodoStore {
     public let container: ModelContainer
     public var context: ModelContext { container.mainContext }
-    private let scheduler: NotificationScheduler
 
-    public init(container: ModelContainer, scheduler: NotificationScheduler = NotificationScheduler()) {
+    public init(container: ModelContainer) {
         self.container = container
-        self.scheduler = scheduler
-    }
-
-    private func notificationsEnabled() -> Bool {
-        if UserDefaults.standard.object(forKey: "notificationsEnabled") == nil {
-            return true
-        }
-        return UserDefaults.standard.bool(forKey: "notificationsEnabled")
-    }
-
-    private func syncNotification(for item: TodoItem) {
-        guard notificationsEnabled(),
-              item.notificationEnabled,
-              item.dueDate != nil,
-              !item.isCompleted else {
-            scheduler.cancel(for: item.id)
-            return
-        }
-        Task {
-            await scheduler.schedule(for: item)
-        }
     }
 
     // MARK: - CRUD
@@ -42,7 +20,6 @@ public final class TodoStore {
                     dueDate: Date? = nil,
                     notes: String? = nil,
                     urlString: String? = nil,
-                    notificationEnabled: Bool = true,
                     hasDueTime: Bool = false,
                     tags: [Tag] = []) -> TodoItem {
         let item = TodoItem(title: title,
@@ -50,12 +27,10 @@ public final class TodoStore {
                             dueDate: dueDate,
                             notes: notes,
                             urlString: urlString,
-                            notificationEnabled: notificationEnabled,
                             hasDueTime: hasDueTime)
         item.tags = tags
         context.insert(item)
         try? context.save()
-        syncNotification(for: item)
         WidgetCenter.shared.reloadAllTimelines()
         return item
     }
@@ -66,7 +41,6 @@ public final class TodoStore {
                        dueDate: Date?? = nil,
                        notes: String?? = nil,
                        urlString: String?? = nil,
-                       notificationEnabled: Bool? = nil,
                        hasDueTime: Bool? = nil,
                        tags: [Tag]? = nil) {
         if let title { item.title = title }
@@ -74,12 +48,10 @@ public final class TodoStore {
         if let dueDate { item.dueDate = dueDate }
         if let notes { item.notes = notes }
         if let urlString { item.urlString = urlString }
-        if let notificationEnabled { item.notificationEnabled = notificationEnabled }
         if let hasDueTime { item.hasDueTime = hasDueTime }
         if let tags { item.tags = tags }
         item.updatedAt = Date()
         try? context.save()
-        syncNotification(for: item)
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -88,12 +60,10 @@ public final class TodoStore {
         item.completedAt = item.isCompleted ? Date() : nil
         item.updatedAt = Date()
         try? context.save()
-        syncNotification(for: item)
         WidgetCenter.shared.reloadAllTimelines()
     }
 
     public func delete(_ item: TodoItem) {
-        scheduler.cancel(for: item.id)
         context.delete(item)
         try? context.save()
         WidgetCenter.shared.reloadAllTimelines()
@@ -106,12 +76,10 @@ public final class TodoStore {
                             dueDate: item.dueDate,
                             notes: item.notes,
                             urlString: item.urlString,
-                            notificationEnabled: item.notificationEnabled,
                             hasDueTime: item.hasDueTime)
         copy.tags = item.tags
         context.insert(copy)
         try? context.save()
-        syncNotification(for: copy)
         WidgetCenter.shared.reloadAllTimelines()
         return copy
     }
@@ -125,15 +93,11 @@ public final class TodoStore {
             item.updatedAt = Date()
         }
         try? context.save()
-        for item in items {
-            syncNotification(for: item)
-        }
         WidgetCenter.shared.reloadAllTimelines()
     }
 
     public func batchDelete(_ items: [TodoItem]) {
         for item in items {
-            scheduler.cancel(for: item.id)
             context.delete(item)
         }
         try? context.save()
@@ -193,7 +157,6 @@ public final class TodoStore {
         let items = (try? context.fetch(descriptor)) ?? []
         let count = items.count
         for item in items {
-            scheduler.cancel(for: item.id)
             context.delete(item)
         }
         try? context.save()

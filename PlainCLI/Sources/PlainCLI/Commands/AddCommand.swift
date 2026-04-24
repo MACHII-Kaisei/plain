@@ -30,9 +30,6 @@ struct AddCommand: ParsableCommand {
     @Option(name: .long, help: "タグ名（複数指定可）")
     var tag: [String] = []
 
-    @Flag(name: .long, help: "通知を無効化")
-    var noNotify: Bool = false
-
     func run() throws {
         let container = try ContainerProvider.shared()
         let context = ModelContext(container)
@@ -46,7 +43,6 @@ struct AddCommand: ParsableCommand {
             dueDate: dueDate,
             notes: note,
             urlString: url,
-            notificationEnabled: !noNotify,
             hasDueTime: at != nil
         )
 
