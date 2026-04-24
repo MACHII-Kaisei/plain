@@ -12,6 +12,17 @@ public final class TodoStore {
         self.container = container
     }
 
+    // MARK: - Private
+
+    private func save() {
+        do {
+            try context.save()
+        } catch {
+            print("[TodoStore] save failed: \(error)")
+            NotificationCenter.default.post(name: .plainSaveError, object: error)
+        }
+    }
+
     // MARK: - CRUD
 
     @discardableResult
@@ -30,7 +41,7 @@ public final class TodoStore {
                             hasDueTime: hasDueTime)
         item.tags = tags
         context.insert(item)
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
         return item
     }
@@ -51,7 +62,7 @@ public final class TodoStore {
         if let hasDueTime { item.hasDueTime = hasDueTime }
         if let tags { item.tags = tags }
         item.updatedAt = Date()
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -59,13 +70,13 @@ public final class TodoStore {
         item.isCompleted.toggle()
         item.completedAt = item.isCompleted ? Date() : nil
         item.updatedAt = Date()
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
     public func delete(_ item: TodoItem) {
         context.delete(item)
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -79,7 +90,7 @@ public final class TodoStore {
                             hasDueTime: item.hasDueTime)
         copy.tags = item.tags
         context.insert(copy)
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
         return copy
     }
@@ -92,7 +103,7 @@ public final class TodoStore {
             item.completedAt = item.isCompleted ? Date() : nil
             item.updatedAt = Date()
         }
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -100,7 +111,7 @@ public final class TodoStore {
         for item in items {
             context.delete(item)
         }
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -111,7 +122,7 @@ public final class TodoStore {
             }
             item.updatedAt = Date()
         }
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -120,7 +131,7 @@ public final class TodoStore {
             item.tags.removeAll(where: { $0.id == tag.id })
             item.updatedAt = Date()
         }
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -130,19 +141,19 @@ public final class TodoStore {
     public func addTag(name: String, colorIndex: Int) -> Tag {
         let tag = Tag(name: name, colorIndex: colorIndex)
         context.insert(tag)
-        try? context.save()
+        save()
         return tag
     }
 
     public func updateTag(_ tag: Tag, name: String? = nil, colorIndex: Int? = nil) {
         if let name { tag.name = name }
         if let colorIndex { tag.colorIndex = colorIndex }
-        try? context.save()
+        save()
     }
 
     public func deleteTag(_ tag: Tag) {
         context.delete(tag)
-        try? context.save()
+        save()
     }
 
     public func fetchAllTags() -> [Tag] {
@@ -159,7 +170,7 @@ public final class TodoStore {
         for item in items {
             context.delete(item)
         }
-        try? context.save()
+        save()
         WidgetCenter.shared.reloadAllTimelines()
         return count
     }

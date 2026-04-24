@@ -10,6 +10,7 @@ extension Notification.Name {
     static let plainEditSelected = Notification.Name("plainEditSelected")
     static let plainDuplicateSelected = Notification.Name("plainDuplicateSelected")
     static let plainDeleteSelected = Notification.Name("plainDeleteSelected")
+    static let plainSaveError = Notification.Name("plainSaveError")
 }
 
 @main

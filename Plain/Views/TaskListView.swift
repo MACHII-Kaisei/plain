@@ -14,6 +14,7 @@ struct TaskListView: View {
     @State private var showTagManager = false
     @State private var showDisplaySettings = false
     @State private var showDeleteCompletedConfirm = false
+    @State private var saveError: Error? = nil
 
     enum EditorSheet: Identifiable {
         case new
@@ -142,6 +143,17 @@ struct TaskListView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .plainNewTask)) { _ in
             editorSheet = .new
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .plainSaveError)) { note in
+            saveError = note.object as? Error
+        }
+        .alert("保存エラー", isPresented: Binding(
+            get: { saveError != nil },
+            set: { if !$0 { saveError = nil } }
+        )) {
+            Button("OK") { saveError = nil }
+        } message: {
+            Text(saveError?.localizedDescription ?? "不明なエラーが発生しました")
         }
     }
 
