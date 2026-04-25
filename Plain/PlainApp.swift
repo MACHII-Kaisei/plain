@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import WidgetKit
 import PlainCore
+import Sparkle
 
 extension Notification.Name {
     static let plainNewTask = Notification.Name("plainNewTask")
@@ -16,6 +17,11 @@ extension Notification.Name {
 @main
 struct PlainApp: App {
     let container: ModelContainer
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
 
     init() {
         do {
@@ -48,6 +54,11 @@ struct PlainApp: App {
         }
         .modelContainer(container)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("アップデートを確認…") {
+                    updaterController.checkForUpdates(nil)
+                }
+            }
             CommandGroup(replacing: .newItem) {
                 Button("新規タスク") {
                     NotificationCenter.default.post(name: .plainNewTask, object: nil)
