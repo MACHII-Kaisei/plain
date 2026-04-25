@@ -47,14 +47,70 @@ xcodebuild \
   archive
 
 echo "[2/4] Extracting .app & ad-hoc 再署名..."
-cp -R "$ARCHIVE_PATH/Products/Applications/$APP_NAME" "$BUILD_DIR/$APP_NAME"
+APP="$BUILD_DIR/$APP_NAME"
+cp -R "$ARCHIVE_PATH/Products/Applications/$APP_NAME" "$APP"
 
 # Development 用プロビジョニングプロファイルは登録機しか起動できないため削除
-find "$BUILD_DIR/$APP_NAME" -name "embedded.provisionprofile" -delete
+find "$APP" -name "embedded.provisionprofile" -delete
 
-# 全体を ad-hoc で再署名（Sparkle のフレームワーク・XPC・Widget まで含めて）
-codesign --force --deep --sign - --options runtime "$BUILD_DIR/$APP_NAME"
-codesign --verify --deep --strict "$BUILD_DIR/$APP_NAME"
+# 内側→外側で個別再署名する。--deep は entitlements を保持しないため使わない。
+# disable-library-validation を入れないと ad-hoc 署名同士でも Hardened Runtime の
+# ライブラリ検証で Team ID 不一致扱いとなり Sparkle.framework がロードできない。
+HELPER_ENT="$BUILD_DIR/_helper.entitlements"
+cat > "$HELPER_ENT" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+
+WIDGET_ENT="$BUILD_DIR/_widget.entitlements"
+cat > "$WIDGET_ENT" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.KaiseiMachii.Plain</string>
+    </array>
+</dict>
+</plist>
+PLIST
+
+APP_ENT="$BUILD_DIR/_app.entitlements"
+cat > "$APP_ENT" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.KaiseiMachii.Plain</string>
+    </array>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+
+SPARKLE_VER="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+codesign --force --options runtime --entitlements "$HELPER_ENT" --sign - "$SPARKLE_VER/XPCServices/Downloader.xpc"
+codesign --force --options runtime --entitlements "$HELPER_ENT" --sign - "$SPARKLE_VER/XPCServices/Installer.xpc"
+codesign --force --options runtime --entitlements "$HELPER_ENT" --sign - "$SPARKLE_VER/Updater.app"
+codesign --force --options runtime --entitlements "$HELPER_ENT" --sign - "$SPARKLE_VER/Autoupdate"
+codesign --force --options runtime --sign - "$APP/Contents/Frameworks/Sparkle.framework"
+
+codesign --force --options runtime --entitlements "$WIDGET_ENT" --sign - "$APP/Contents/PlugIns/PlainWidgetExtension.appex"
+codesign --force --options runtime --entitlements "$APP_ENT" --sign - "$APP"
+
+codesign --verify --deep --strict "$APP"
+
+rm -f "$HELPER_ENT" "$WIDGET_ENT" "$APP_ENT"
 
 echo "[3/4] Building .dmg..."
 hdiutil create \
