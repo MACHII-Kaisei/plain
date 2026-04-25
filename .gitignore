@@ -13,6 +13,8 @@ xcuserdata/
 
 # Claude Code
 .claude/
+.serena/
 
-# Docs
-docs/
+# Docs (specs は非公開、ユーザー向け文書のみ公開)
+docs/*
+!docs/install.md
