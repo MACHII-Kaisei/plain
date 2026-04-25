@@ -46,8 +46,15 @@ xcodebuild \
   -allowProvisioningUpdates \
   archive
 
-echo "[2/4] Extracting .app..."
+echo "[2/4] Extracting .app & ad-hoc 再署名..."
 cp -R "$ARCHIVE_PATH/Products/Applications/$APP_NAME" "$BUILD_DIR/$APP_NAME"
+
+# Development 用プロビジョニングプロファイルは登録機しか起動できないため削除
+find "$BUILD_DIR/$APP_NAME" -name "embedded.provisionprofile" -delete
+
+# 全体を ad-hoc で再署名（Sparkle のフレームワーク・XPC・Widget まで含めて）
+codesign --force --deep --sign - --options runtime "$BUILD_DIR/$APP_NAME"
+codesign --verify --deep --strict "$BUILD_DIR/$APP_NAME"
 
 echo "[3/4] Building .dmg..."
 hdiutil create \
