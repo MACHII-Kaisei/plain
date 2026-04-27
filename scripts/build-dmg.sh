@@ -66,6 +66,10 @@ ARCHIVE_ARGS=(
 )
 if [[ "$SIGNING_MODE" == "developerid" ]]; then
   ARCHIVE_ARGS+=(DEVELOPMENT_TEAM="$APPLE_TEAM_ID")
+elif [[ -n "${DEVELOPMENT_TEAM:-}" ]]; then
+  # adhoc モードでも archive 段階では何らかの team が必要（Sparkle の framework 検証等）。
+  # 再署名で ad-hoc に置き換わるため、メンテナの team を一時的に渡せるようにする。
+  ARCHIVE_ARGS+=(DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM")
 fi
 xcodebuild "${ARCHIVE_ARGS[@]}" archive
 
