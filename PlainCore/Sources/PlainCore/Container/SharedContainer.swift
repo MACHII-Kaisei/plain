@@ -2,13 +2,15 @@ import Foundation
 import SwiftData
 
 public enum SharedContainer {
-    public static let appGroupIdentifier = "group.com.KaiseiMachii.Plain"
+    public static let appGroupIdentifier = "group.app.plain.Plain"
+    static let legacyAppGroupIdentifiers = ["group.com.KaiseiMachii.Plain"]
 
     public static func makeSharedContainer() throws -> ModelContainer {
         let schema = Schema([TodoItem.self, Tag.self])
         let url = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)!
             .appendingPathComponent("Plain.sqlite")
+        migrateLegacyStoreIfNeeded(to: url)
         let config = ModelConfiguration(schema: schema, url: url)
 
         do {
@@ -89,6 +91,25 @@ public enum SharedContainer {
             URL(fileURLWithPath: baseURL.path + "-shm"),
             URL(fileURLWithPath: baseURL.path + "-wal")
         ]
+    }
+
+    private static func migrateLegacyStoreIfNeeded(to newURL: URL) {
+        let fm = FileManager.default
+        guard !fm.fileExists(atPath: newURL.path) else { return }
+
+        for legacyId in legacyAppGroupIdentifiers {
+            guard let legacyContainer = fm.containerURL(forSecurityApplicationGroupIdentifier: legacyId) else { continue }
+            let legacyURL = legacyContainer.appendingPathComponent("Plain.sqlite")
+            guard fm.fileExists(atPath: legacyURL.path) else { continue }
+
+            try? fm.createDirectory(at: newURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            for file in candidateStoreFiles(for: legacyURL) {
+                guard fm.fileExists(atPath: file.path) else { continue }
+                let dest = newURL.deletingLastPathComponent().appendingPathComponent(file.lastPathComponent)
+                try? fm.copyItem(at: file, to: dest)
+            }
+            return
+        }
     }
 }
 

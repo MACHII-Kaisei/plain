@@ -1,10 +1,3 @@
-//
-//  PlainUITestsLaunchTests.swift
-//  PlainUITests
-//
-//  Created by 町井海晟 on 2026/04/18.
-//
-
 import XCTest
 
 final class PlainUITestsLaunchTests: XCTestCase {

@@ -1,10 +1,3 @@
-//
-//  PlainTests.swift
-//  PlainTests
-//
-//  Created by 町井海晟 on 2026/04/18.
-//
-
 import Testing
 @testable import Plain
 

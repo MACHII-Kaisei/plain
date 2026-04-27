@@ -14,7 +14,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.KaiseiMachii.Plain.url</string>
+			<string>app.plain.Plain.url</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>plain</string>

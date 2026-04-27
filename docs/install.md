@@ -1,4 +1,7 @@
-# Plain インストール手順（友人配布版）
+# Plain DMG インストール手順（フォールバック）
+
+> **推奨はソースからのビルドです**（[README](../README.md) 参照）。Widget の信頼性が高くなります。
+> 本ドキュメントは Xcode を入れたくない人向けの DMG インストール手順です。
 
 未公証のため macOS Gatekeeper の警告が出ます。以下の手順で起動してください。
 
@@ -29,7 +32,8 @@ xattr -cr /Applications/Plain.app
 ## アンインストール
 
 `/Applications/Plain.app` をゴミ箱に入れるだけです。
-データは `~/Library/Group Containers/group.com.KaiseiMachii.Plain/` に残ります。完全削除する場合はこのフォルダも削除してください。
+データは `~/Library/Group Containers/group.app.plain.Plain/` に残ります。完全削除する場合はこのフォルダも削除してください。
+（v0.1.3 以前を使っていた場合は `~/Library/Group Containers/group.com.KaiseiMachii.Plain/` にも残っている可能性があります。新バージョン初回起動時に自動コピーされますが、不要なら手動で削除してください。）
 
 ## アップデート
 
