@@ -62,14 +62,22 @@ ARCHIVE_ARGS=(
   -configuration Release
   -destination "generic/platform=macOS"
   -archivePath "$ARCHIVE_PATH"
-  -allowProvisioningUpdates
 )
 if [[ "$SIGNING_MODE" == "developerid" ]]; then
-  ARCHIVE_ARGS+=(DEVELOPMENT_TEAM="$APPLE_TEAM_ID")
-elif [[ -n "${DEVELOPMENT_TEAM:-}" ]]; then
-  # adhoc モードでも archive 段階では何らかの team が必要（Sparkle の framework 検証等）。
-  # 再署名で ad-hoc に置き換わるため、メンテナの team を一時的に渡せるようにする。
-  ARCHIVE_ARGS+=(DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM")
+  ARCHIVE_ARGS+=(
+    -allowProvisioningUpdates
+    DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
+  )
+else
+  # adhoc: 開発者ポータルや provisioning profile への依存をなくし、archive 段階から
+  # ad-hoc 署名で完結させる。後段で Sparkle 等を含めて再署名するため archive 時の
+  # 署名は最小限で OK。
+  ARCHIVE_ARGS+=(
+    CODE_SIGN_STYLE=Manual
+    CODE_SIGN_IDENTITY="-"
+    DEVELOPMENT_TEAM=""
+    PROVISIONING_PROFILE_SPECIFIER=""
+  )
 fi
 xcodebuild "${ARCHIVE_ARGS[@]}" archive
 
