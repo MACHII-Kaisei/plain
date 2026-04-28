@@ -69,12 +69,13 @@ if [[ "$SIGNING_MODE" == "developerid" ]]; then
     DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
   )
 else
-  # adhoc: 開発者ポータルや provisioning profile への依存をなくし、archive 段階から
-  # ad-hoc 署名で完結させる。後段で Sparkle 等を含めて再署名するため archive 時の
-  # 署名は最小限で OK。
+  # adhoc: archive 段階では署名を完全にスキップし、後段で ad-hoc 再署名する。
+  # 開発者ポータル / provisioning profile / メンテナの team 一切に依存しない。
   ARCHIVE_ARGS+=(
     CODE_SIGN_STYLE=Manual
-    CODE_SIGN_IDENTITY="-"
+    CODE_SIGN_IDENTITY=""
+    CODE_SIGNING_REQUIRED=NO
+    CODE_SIGNING_ALLOWED=NO
     DEVELOPMENT_TEAM=""
     PROVISIONING_PROFILE_SPECIFIER=""
   )
