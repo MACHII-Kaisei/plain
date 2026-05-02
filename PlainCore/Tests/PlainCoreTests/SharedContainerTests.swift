@@ -5,7 +5,7 @@ import Foundation
 
 @Test
 func appGroupIdentifierIsExpected() {
-    #expect(SharedContainer.appGroupIdentifier == "group.app.plain.Plain")
+    #expect(SharedContainer.appGroupIdentifier == "A965XW5879.group.app.plain.Plain")
 }
 
 @Test

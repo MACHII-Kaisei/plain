@@ -100,7 +100,7 @@ cat > "$WIDGET_ENT" <<'PLIST'
     <true/>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.app.plain.Plain</string>
+        <string>A965XW5879.group.app.plain.Plain</string>
     </array>
 </dict>
 </plist>
@@ -121,7 +121,7 @@ if [[ "$SIGNING_MODE" == "adhoc" ]]; then
     <true/>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.app.plain.Plain</string>
+        <string>A965XW5879.group.app.plain.Plain</string>
     </array>
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
@@ -141,7 +141,7 @@ else
     <true/>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.app.plain.Plain</string>
+        <string>A965XW5879.group.app.plain.Plain</string>
     </array>
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>

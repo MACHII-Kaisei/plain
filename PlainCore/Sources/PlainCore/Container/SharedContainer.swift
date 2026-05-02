@@ -2,8 +2,11 @@ import Foundation
 import SwiftData
 
 public enum SharedContainer {
-    public static let appGroupIdentifier = "group.app.plain.Plain"
-    static let legacyAppGroupIdentifiers = ["group.com.KaiseiMachii.Plain"]
+    public static let appGroupIdentifier = "A965XW5879.group.app.plain.Plain"
+    static let legacyAppGroupIdentifiers = [
+        "group.app.plain.Plain",
+        "group.com.KaiseiMachii.Plain"
+    ]
 
     public static func makeSharedContainer() throws -> ModelContainer {
         let schema = Schema([TodoItem.self, Tag.self])
@@ -112,4 +115,3 @@ public enum SharedContainer {
         }
     }
 }
-

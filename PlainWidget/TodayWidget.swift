@@ -9,8 +9,8 @@ struct TodayWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             TodayWidgetView(entry: entry)
         }
-        .configurationDisplayName("Plain - 今日")
-        .description("今日と明日のタスクを表示します。")
+        .configurationDisplayName("Plain - TODO")
+        .description("未完了タスクを期限が近い順に表示します。")
         .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
