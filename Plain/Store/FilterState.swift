@@ -3,7 +3,6 @@ import PlainCore
 
 @Observable
 public class FilterState {
-    public var priorities: Set<Priority> = []
     public var tagIDs: Set<UUID> = []
     public var dueDateFilter: DueDateFilter? = nil
     public var sortOrder: TaskSortOrder {
@@ -34,22 +33,16 @@ public class FilterState {
     }
 
     public var hasActiveFilters: Bool {
-        !priorities.isEmpty || !tagIDs.isEmpty || dueDateFilter != nil
+        !tagIDs.isEmpty || dueDateFilter != nil
     }
 
     public func reset() {
-        priorities = []
         tagIDs = []
         dueDateFilter = nil
     }
 
     public func apply(to items: [TodoItem], now: Date = Date()) -> [TodoItem] {
         var result = items
-
-        // Priority filter
-        if !priorities.isEmpty {
-            result = result.filter { priorities.contains($0.priority) }
-        }
 
         // Tag filter (OR: any of the selected tags)
         if !tagIDs.isEmpty {

@@ -12,14 +12,6 @@ struct TaskRowView: View {
     let onEdit: () -> Void
     let onBulkToggle: () -> Void
 
-    private var priorityColor: Color {
-        switch item.priority {
-        case .high: .red
-        case .medium: .yellow
-        case .low: .blue
-        }
-    }
-
     private static let dueDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ja_JP")
@@ -54,66 +46,63 @@ struct TaskRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Bulk selection checkbox
+        HStack(alignment: .center, spacing: 10) {
             if isBulkMode {
                 Button(action: onBulkToggle) {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(isSelected ? Color.accentColor : .secondary)
-                        .font(.title3)
+                        .font(.system(size: 18))
+                        .foregroundStyle(isSelected ? Color(hex: 0x0058bc) : Color(hex: 0xc1c6d7))
                 }
                 .buttonStyle(.plain)
             }
 
-            // Completion toggle
             if !isBulkMode {
                 Button(action: onToggle) {
-                    Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
-                        .foregroundStyle(item.isCompleted ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(HierarchicalShapeStyle.secondary))
+                    Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 18))
+                        .foregroundStyle(item.isCompleted ? Color(hex: 0x0058bc) : Color(hex: 0xc1c6d7))
                 }
                 .accessibilityLabel(item.isCompleted ? "完了済み" : "未完了")
                 .accessibilityIdentifier("toggle-\(item.id.uuidString)")
                 .buttonStyle(.plain)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.title)
-                    .strikethrough(item.isCompleted)
-                    .foregroundStyle(item.isCompleted ? .secondary : .primary)
-                    .lineLimit(1)
-
-                if let notes = trimmedNotes {
-                    Text(notes)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(item.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .strikethrough(item.isCompleted)
+                        .foregroundStyle(item.isCompleted ? Color(hex: 0x717786) : Color(hex: 0x181c23))
                         .lineLimit(1)
+                        .layoutPriority(0)
+
+                    if showTags && !item.tags.isEmpty {
+                        HStack(spacing: 4) {
+                            ForEach(item.tags, id: \.id) { tag in
+                                tagChip(tag)
+                            }
+                        }
+                        .fixedSize(horizontal: true, vertical: false)
+                        .layoutPriority(2)
+                    }
                 }
 
-                // Tag chips
-                if showTags && !item.tags.isEmpty {
-                    HStack(spacing: 4) {
-                        ForEach(item.tags, id: \.id) { tag in
-                            let color = TagColor.from(index: tag.colorIndex)
-                            Text(tag.name)
-                                .font(.caption2)
-                                .foregroundStyle(color.foregroundColor)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 1)
-                                .background(color.backgroundColor)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                                .lineLimit(1)
-                        }
+                HStack(spacing: 10) {
+                    if let notes = trimmedNotes {
+                        Text(notes)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color(hex: 0x717786))
+                            .lineLimit(1)
+                    }
+                    if let due = item.dueDate {
+                        Label(formatDue(due), systemImage: item.hasDueTime ? "clock" : "calendar")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color(hex: 0x717786))
+                            .labelStyle(.titleAndIcon)
                     }
                 }
             }
-
-            Spacer()
-
-            if let due = item.dueDate {
-                Text(formatDue(due))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             if !isBulkMode {
                 if let urlString = trimmedURLString {
@@ -122,22 +111,52 @@ struct TaskRowView: View {
                         NSWorkspace.shared.open(url)
                     } label: {
                         Image(systemName: "link")
+                            .font(.system(size: 13, weight: .medium))
                     }
                     .buttonStyle(.plain)
+                    .foregroundStyle(Color(hex: 0x717786))
                     .accessibilityLabel("URL を開く")
                 }
 
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
+                        .font(.system(size: 13, weight: .medium))
                 }
                 .buttonStyle(.plain)
+                .foregroundStyle(Color(hex: 0x717786))
                 .accessibilityLabel("編集")
             }
-
-            Circle().fill(priorityColor).frame(width: 6, height: 6)
-                .accessibilityLabel("優先度")
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(hex: 0xecedf3), lineWidth: 1)
+        }
         .contentShape(Rectangle())
+    }
+
+    private func tagChip(_ tag: Tag) -> some View {
+        let color = TagColor.from(index: tag.colorIndex)
+        return Text(tag.name)
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(color.foregroundColor)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.backgroundColor, in: Capsule())
+    }
+}
+
+private extension Color {
+    init(hex: Int) {
+        self.init(
+            red:   Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8)  & 0xFF) / 255,
+            blue:  Double( hex        & 0xFF) / 255
+        )
     }
 }

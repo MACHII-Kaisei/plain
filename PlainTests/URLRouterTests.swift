@@ -7,6 +7,11 @@ import Testing
     #expect(URLRouter.parse(url) == .newTask)
 }
 
+@Test func parseSyncURL() {
+    let url = URL(string: "plain://sync")!
+    #expect(URLRouter.parse(url) == .sync)
+}
+
 @Test func parseOpenTaskURL() throws {
     let uuid = UUID()
     let url = URL(string: "plain://task/\(uuid.uuidString)")!

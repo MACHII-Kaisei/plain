@@ -4,7 +4,7 @@ import PlainCore
 
 struct TaskListView: View {
     @Environment(\.modelContext) private var context
-    @State private var sidebarSelection: SidebarItem = .today
+    @State private var sidebarSelection: SidebarItem = .thisWeek
     @State private var editorSheet: EditorSheet? = nil
     @State private var searchText: String = ""
     @State private var selectedItemID: UUID? = nil
@@ -31,7 +31,6 @@ struct TaskListView: View {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
         switch sidebarSelection {
-        case .today: return today
         case .thisWeek: return today
         case .upcoming, .completed: return nil
         }
@@ -44,7 +43,6 @@ struct TaskListView: View {
             VStack(spacing: 0) {
                 if sidebarSelection != .completed {
                     FilterBarView(filterState: filterState, sidebarSelection: sidebarSelection)
-                    Divider()
                 }
 
                 MainListView(
@@ -61,11 +59,11 @@ struct TaskListView: View {
                     if sidebarSelection != .completed && !isBulkMode {
                         Button(action: { editorSheet = .new }) {
                             Image(systemName: "plus")
-                                .font(.title2)
+                                .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(.white)
-                                .frame(width: 44, height: 44)
-                                .background(Color.accentColor, in: Circle())
-                                .shadow(radius: 4, y: 2)
+                                .frame(width: 46, height: 46)
+                                .background(Color(hex: 0x0058bc), in: Circle())
+                                .shadow(color: .black.opacity(0.16), radius: 12, y: 4)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("新しいタスクを追加")
@@ -75,6 +73,7 @@ struct TaskListView: View {
                 }
                 .searchable(text: $searchText)
             }
+            .background(Color(hex: 0xf7f8fb))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
@@ -226,8 +225,6 @@ private struct MainListView: View {
         let now = Date()
         let sectionFiltered: [TodoItem]
         switch sidebarSelection {
-        case .today:
-            sectionFiltered = items.filter { TaskClassifier.classify(item: $0, now: now) == .today }
         case .thisWeek:
             let cal = Calendar.current
             let todayStart = cal.startOfDay(for: now)
@@ -265,12 +262,22 @@ private struct MainListView: View {
         filteredItems.filter { bulkSelection.contains($0.id) }
     }
 
+    private var bulkCompletionActionTitle: String {
+        sidebarSelection == .completed ? "未完了に戻す" : "完了にする"
+    }
+
+    private var bulkCompletionActionSystemImage: String {
+        sidebarSelection == .completed ? "arrow.uturn.backward" : "checkmark"
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if isBulkMode {
                 BulkActionBar(
                     selectedItems: $bulkSelection,
                     totalCount: filteredItems.count,
+                    completionActionTitle: bulkCompletionActionTitle,
+                    completionActionSystemImage: bulkCompletionActionSystemImage,
                     onSelectAll: {
                         if bulkSelection.count == filteredItems.count {
                             bulkSelection.removeAll()
@@ -304,7 +311,7 @@ private struct MainListView: View {
                 } else if filteredItems.isEmpty {
                     Text("該当するタスクはありません").foregroundStyle(.secondary)
                 } else {
-                    List {
+                    List(selection: $selectedItemID) {
                         ForEach(filteredItems, id: \.id) { item in
                             TaskRowView(
                                 item: item,
@@ -330,6 +337,9 @@ private struct MainListView: View {
                                     } else {
                                         bulkSelection.insert(item.id)
                                     }
+                                } else {
+                                    selectedItemID = item.id
+                                    onEdit(item)
                                 }
                             }
                             .contextMenu {
@@ -341,9 +351,11 @@ private struct MainListView: View {
                                             }
                                         }
                                     }
-                                    Button("完了にする") {
+                                    Button {
                                         store.batchToggleComplete(selectedItems)
                                         exitBulkMode()
+                                    } label: {
+                                        Label(bulkCompletionActionTitle, systemImage: bulkCompletionActionSystemImage)
                                     }
                                     Button("削除（\(bulkSelection.count)件）", role: .destructive) {
                                         store.batchDelete(selectedItems)
@@ -357,8 +369,14 @@ private struct MainListView: View {
                                 }
                             }
                             .tag(item.id)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 3, leading: 14, bottom: 3, trailing: 14))
                         }
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color(hex: 0xf7f8fb))
                 }
             }
         }
@@ -391,5 +409,15 @@ private struct MainListView: View {
     private func exitBulkMode() {
         isBulkMode = false
         bulkSelection = []
+    }
+}
+
+private extension Color {
+    init(hex: Int) {
+        self.init(
+            red:   Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8)  & 0xFF) / 255,
+            blue:  Double( hex        & 0xFF) / 255
+        )
     }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import WidgetKit
+import AppKit
 import PlainCore
 import Sparkle
 
@@ -12,11 +13,14 @@ extension Notification.Name {
     static let plainDuplicateSelected = Notification.Name("plainDuplicateSelected")
     static let plainDeleteSelected = Notification.Name("plainDeleteSelected")
     static let plainSaveError = Notification.Name("plainSaveError")
+    static let plainDataDidChange = Notification.Name("plainDataDidChange")
+    static let plainReminderSyncNow = Notification.Name("plainReminderSyncNow")
 }
 
 @main
 struct PlainApp: App {
     let container: ModelContainer
+    @State private var syncCoordinator: ReminderSyncCoordinator?
     private let updaterController = SPUStandardUpdaterController(
         startingUpdater: true,
         updaterDelegate: nil,
@@ -26,10 +30,13 @@ struct PlainApp: App {
     init() {
         do {
             // UITest 実行中はインメモリコンテナを使用（App Group が使えない場合の対策）
-            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            let isRunningUITests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            if isRunningUITests {
                 container = try SharedContainer.makeInMemoryContainer()
             } else {
                 container = try SharedContainer.makeSharedContainer()
+                try? SharedWidgetSnapshotStore.write(from: container)
+                WidgetCenter.shared.reloadAllTimelines()
             }
         } catch {
             fatalError("Failed to init SharedContainer: \(error)")
@@ -42,14 +49,25 @@ struct PlainApp: App {
                 .onOpenURL { url in
                     if let action = URLRouter.parse(url) {
                         switch action {
+                        case .open:
+                            NSApp.activate(ignoringOtherApps: true)
                         case .newTask:
                             NotificationCenter.default.post(name: .plainNewTask, object: nil)
                         case .openTask(let id):
                             NotificationCenter.default.post(name: .plainOpenTask, object: id)
                         case .reload:
                             WidgetCenter.shared.reloadAllTimelines()
+                        case .sync:
+                            NotificationCenter.default.post(name: .plainReminderSyncNow, object: nil)
                         }
                     }
+                }
+                .task {
+                    guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil,
+                          syncCoordinator == nil else { return }
+                    let coordinator = ReminderSyncCoordinator(container: container)
+                    coordinator.start()
+                    syncCoordinator = coordinator
                 }
         }
         .modelContainer(container)

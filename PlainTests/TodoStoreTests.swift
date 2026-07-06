@@ -17,7 +17,6 @@ struct TodoStoreTests {
         #expect(items.count == 1)
         #expect(item.title == "A")
         #expect(item.isCompleted == false)
-        #expect(item.priority == .medium)
         #expect(item.dueDate == nil)
     }
 
@@ -60,17 +59,16 @@ struct TodoStoreTests {
     }
 
     @Test @MainActor
-    func updateChangesTitleAndPriorityAndUpdatesTimestamp() throws {
+    func updateChangesTitleAndUpdatesTimestamp() throws {
         let container = try SharedContainer.makeInMemoryContainer()
         let store = TodoStore(container: container)
         let item = store.add(title: "old")
         let originalUpdatedAt = item.updatedAt
 
         Thread.sleep(forTimeInterval: 0.01)
-        store.update(item, title: "new", priority: .high)
+        store.update(item, title: "new")
 
         #expect(item.title == "new")
-        #expect(item.priority == .high)
         #expect(item.updatedAt > originalUpdatedAt)
     }
 
@@ -113,13 +111,12 @@ struct TodoStoreTests {
         let store = TodoStore(container: container)
         let context = container.mainContext
         let inputDate = Calendar.current.date(from: DateComponents(year: 2026, month: 4, day: 17, hour: 9, minute: 0))!
-        let item = store.add(title: "元", priority: .high, dueDate: inputDate)
+        let item = store.add(title: "元", dueDate: inputDate)
 
         let copy = store.duplicate(item)
         let items = try context.fetch(FetchDescriptor<TodoItem>())
 
         #expect(copy.title == "元 (コピー)")
-        #expect(copy.priority == .high)
         #expect(copy.dueDate == item.dueDate)
         #expect(items.count == 2)
     }

@@ -9,39 +9,6 @@ struct FilterBarView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            // Priority filter
-            Menu {
-                Button("すべて") {
-                    filterState.priorities = []
-                }
-                Divider()
-                ForEach([Priority.high, .medium, .low], id: \.self) { p in
-                    Button {
-                        if filterState.priorities.contains(p) {
-                            filterState.priorities.remove(p)
-                        } else {
-                            filterState.priorities.insert(p)
-                        }
-                    } label: {
-                        HStack {
-                            Text(priorityLabel(p))
-                            if filterState.priorities.contains(p) {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-            } label: {
-                filterChip(
-                    title: "優先度",
-                    count: filterState.priorities.count,
-                    isActive: !filterState.priorities.isEmpty
-                )
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-
-            // Tag filter
             Menu {
                 Button("すべて") {
                     filterState.tagIDs = []
@@ -68,6 +35,7 @@ struct FilterBarView: View {
                 }
             } label: {
                 filterChip(
+                    icon: "tag",
                     title: "タグ",
                     count: filterState.tagIDs.count,
                     isActive: !filterState.tagIDs.isEmpty
@@ -76,8 +44,7 @@ struct FilterBarView: View {
             .menuStyle(.borderlessButton)
             .fixedSize()
 
-            // Due date filter
-            let isDueDateDisabled = sidebarSelection == .today || sidebarSelection == .thisWeek
+            let isDueDateDisabled = sidebarSelection == .thisWeek
             Menu {
                 Button("すべて") {
                     filterState.dueDateFilter = nil
@@ -97,6 +64,7 @@ struct FilterBarView: View {
                 }
             } label: {
                 filterChip(
+                    icon: "calendar",
                     title: "期日",
                     count: filterState.dueDateFilter == nil ? 0 : 1,
                     isActive: filterState.dueDateFilter != nil
@@ -109,7 +77,6 @@ struct FilterBarView: View {
 
             Spacer()
 
-            // Sort order
             Menu {
                 ForEach(TaskSortOrder.allCases, id: \.self) { order in
                     Button {
@@ -126,42 +93,49 @@ struct FilterBarView: View {
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.up.arrow.down")
-                        .font(.caption2)
+                        .font(.system(size: 10, weight: .medium))
                     Text(filterState.sortOrder.label)
-                        .font(.caption)
+                        .font(.system(size: 12, weight: .medium))
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color(red: 241/255, green: 243/255, blue: 254/255))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .foregroundStyle(Color(hex: 0x414755))
+                .background(Color.white, in: Capsule())
+                .overlay(Capsule().stroke(Color(hex: 0xecedf3), lineWidth: 1))
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+        .padding(.vertical, 10)
+        .background(Color(hex: 0xf7f8fb))
     }
 
     @ViewBuilder
-    private func filterChip(title: String, count: Int, isActive: Bool) -> some View {
+    private func filterChip(icon: String, title: String, count: Int, isActive: Bool) -> some View {
         HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .medium))
             Text(count > 0 ? "\(title) (\(count))" : title)
-                .font(.caption)
+                .font(.system(size: 12, weight: .medium))
             Image(systemName: "chevron.down")
                 .font(.system(size: 8, weight: .semibold))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(isActive ? Color.accentColor.opacity(0.15) : Color(red: 241/255, green: 243/255, blue: 254/255))
-        .foregroundStyle(isActive ? Color.accentColor : .secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(isActive ? Color(hex: 0xe1efff) : Color.white, in: Capsule())
+        .foregroundStyle(isActive ? Color(hex: 0x0058bc) : Color(hex: 0x717786))
+        .overlay(Capsule().stroke(isActive ? Color(hex: 0xa1caff) : Color(hex: 0xecedf3), lineWidth: 1))
     }
 
-    private func priorityLabel(_ p: Priority) -> String {
-        switch p {
-        case .high:   "高"
-        case .medium: "中"
-        case .low:    "低"
-        }
+}
+
+private extension Color {
+    init(hex: Int) {
+        self.init(
+            red:   Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8)  & 0xFF) / 255,
+            blue:  Double( hex        & 0xFF) / 255
+        )
     }
 }

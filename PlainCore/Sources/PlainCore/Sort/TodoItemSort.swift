@@ -2,14 +2,12 @@ import Foundation
 
 public enum TaskSortOrder: String, CaseIterable, Sendable {
     case dueDate
-    case priority
     case createdAt
     case title
 
     public var label: String {
         switch self {
         case .dueDate:   "期日順"
-        case .priority:  "優先度順"
         case .createdAt: "作成日順"
         case .title:     "タイトル順"
         }
@@ -27,8 +25,6 @@ public enum TodoItemSort {
         switch order {
         case .dueDate:
             return compareDueDate
-        case .priority:
-            return comparePriority
         case .createdAt:
             return compareCreatedAt
         case .title:
@@ -36,26 +32,8 @@ public enum TodoItemSort {
         }
     }
 
-    /// デフォルト: 期日昇順（nil最後）→ 優先度降順 → 作成日昇順
+    /// デフォルト: 期日昇順（nil最後）→ 作成日昇順
     public static func compareDueDate(_ lhs: TodoItem, _ rhs: TodoItem) -> Bool {
-        switch (lhs.dueDate, rhs.dueDate) {
-        case let (l?, r?):
-            if l != r { return l < r }
-        case (nil, .some): return false
-        case (.some, nil): return true
-        case (nil, nil): break
-        }
-        if lhs.priority != rhs.priority {
-            return lhs.priority.rawValue > rhs.priority.rawValue
-        }
-        return lhs.createdAt < rhs.createdAt
-    }
-
-    /// 優先度降順 → 期日昇順 → 作成日昇順
-    public static func comparePriority(_ lhs: TodoItem, _ rhs: TodoItem) -> Bool {
-        if lhs.priority != rhs.priority {
-            return lhs.priority.rawValue > rhs.priority.rawValue
-        }
         switch (lhs.dueDate, rhs.dueDate) {
         case let (l?, r?):
             if l != r { return l < r }

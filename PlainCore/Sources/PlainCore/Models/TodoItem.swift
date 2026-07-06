@@ -1,1 +1,1 @@
-public typealias TodoItem = PlainSchemaV2.TodoItem
+public typealias TodoItem = PlainSchemaV3.TodoItem

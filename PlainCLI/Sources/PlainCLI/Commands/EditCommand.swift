@@ -24,9 +24,6 @@ struct EditCommand: ParsableCommand {
     @Flag(name: .long, help: "期日を解除")
     var noDue: Bool = false
 
-    @Option(name: .shortAndLong, help: "優先度を変更: high(h), medium(m), low(l)")
-    var priority: String?
-
     @Option(name: .shortAndLong, help: "メモを変更")
     var note: String?
 
@@ -67,9 +64,6 @@ struct EditCommand: ParsableCommand {
             item.dueDate = DateParser.applyTime(at, to: existingDue)
         }
 
-        if let priority, let pri = PriorityParser.parse(priority) {
-            item.priority = pri
-        }
         if let note { item.notes = note.isEmpty ? nil : note }
         if let url { item.urlString = url.isEmpty ? nil : url }
 

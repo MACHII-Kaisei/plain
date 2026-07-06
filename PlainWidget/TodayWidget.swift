@@ -11,6 +11,6 @@ struct TodayWidget: Widget {
         }
         .configurationDisplayName("Plain - TODO")
         .description("未完了タスクを期限が近い順に表示します。")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }

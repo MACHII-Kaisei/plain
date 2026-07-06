@@ -19,7 +19,6 @@ struct TaskEditorView: View {
     @State private var hourString: String = "09"
     @State private var minuteString: String = "00"
     @State private var showCalendar: Bool = false
-    @State private var priority: Priority = .medium
     @State private var notes: String = ""
     @State private var urlString: String = ""
     @State private var selectedTagIDs: Set<UUID> = []
@@ -46,7 +45,6 @@ struct TaskEditorView: View {
                 hasDueTime = false
             case .edit(let item):
                 title = item.title
-                priority = item.priority
                 notes = item.notes ?? ""
                 urlString = item.urlString ?? ""
                 hasDueDate = item.dueDate != nil
@@ -70,6 +68,9 @@ struct TaskEditorView: View {
 
     private var headerBar: some View {
         HStack(spacing: 10) {
+            Text(isEdit ? "タスクを編集" : "新規タスク")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color(hex: 0x181c23))
             Spacer()
             Button("キャンセル", action: onClose)
                 .buttonStyle(.bordered)
@@ -81,7 +82,7 @@ struct TaskEditorView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.white.opacity(0.5))
+        .background(Color.white)
     }
 
     // MARK: - Content
@@ -89,10 +90,9 @@ struct TaskEditorView: View {
     private var contentArea: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Title
                 VStack(alignment: .leading, spacing: 12) {
                     TextField("タイトルを入力", text: $title)
-                        .font(.system(size: 24, weight: .medium))
+                        .font(.system(size: 22, weight: .semibold))
                         .textFieldStyle(.plain)
                         .accessibilityIdentifier("title-field")
                         .focused($titleFocused)
@@ -100,35 +100,30 @@ struct TaskEditorView: View {
                     Divider()
                 }
 
-                // Memo
                 VStack(alignment: .leading, spacing: 8) {
                     sectionLabel("メモ")
                     TextEditor(text: $notes)
                         .frame(height: 90)
                         .scrollIndicators(.hidden)
                         .padding(12)
-                        .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .cardShadow()
+                        .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+                        .fieldBorder()
                 }
 
-                // Bottom 2 columns
                 HStack(alignment: .top, spacing: 20) {
-                    // Left: URL + Priority + Tags
                     VStack(alignment: .leading, spacing: 16) {
                         urlSection
-                        prioritySection
                         tagSection
                     }
                     .frame(maxWidth: .infinity)
 
-                    // Right: Due date + Notification
                     dueDateSection
                         .frame(maxWidth: .infinity)
                 }
             }
             .padding(28)
         }
+        .scrollContentBackground(.hidden)
     }
 
     // MARK: - URL
@@ -147,40 +142,8 @@ struct TaskEditorView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .cardShadow()
-        }
-    }
-
-    // MARK: - Priority
-
-    private var prioritySection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            sectionLabel("優先度")
-            HStack(spacing: 0) {
-                ForEach([Priority.low, .medium, .high], id: \.self) { p in
-                    Button {
-                        priority = p
-                    } label: {
-                        Text(p.label)
-                            .font(.system(size: 14, weight: priority == p ? .semibold : .regular))
-                            .foregroundStyle(priority == p ? Color.primary : Color.secondary)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 32)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(priority == p ? Color.white : Color.clear)
-                    )
-                    .shadow(color: priority == p ? .black.opacity(0.12) : .clear, radius: 4, x: 0, y: 2)
-                }
-            }
-            .padding(4)
-            .background(Color(red: 241/255, green: 243/255, blue: 254/255))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+            .fieldBorder()
         }
     }
 
@@ -190,7 +153,6 @@ struct TaskEditorView: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("タグ")
             VStack(alignment: .leading, spacing: 8) {
-                // Existing tags as chips
                 if !allTags.isEmpty {
                     FlowLayout(spacing: 6) {
                         ForEach(allTags) { tag in
@@ -214,10 +176,9 @@ struct TaskEditorView: View {
                                 .foregroundStyle(color.foregroundColor)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(color.backgroundColor)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .background(color.backgroundColor, in: Capsule())
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
+                                    Capsule()
                                         .stroke(isSelected ? color.foregroundColor : .clear, lineWidth: 1.5)
                                 )
                             }
@@ -226,15 +187,14 @@ struct TaskEditorView: View {
                     }
                 }
 
-                // Add new tag inline
                 if isAddingTag {
                     VStack(spacing: 8) {
                         TextField("タグ名", text: $newTagName)
                             .textFieldStyle(.plain)
                             .font(.callout)
                             .padding(8)
-                            .background(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+                            .fieldBorder()
 
                         tagColorGrid
 
@@ -259,7 +219,7 @@ struct TaskEditorView: View {
                         }
                     }
                     .padding(8)
-                    .background(Color(red: 241/255, green: 243/255, blue: 254/255))
+                    .background(Color(hex: 0xf7f8fb))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 } else {
                     Button {
@@ -275,9 +235,8 @@ struct TaskEditorView: View {
                 }
             }
             .padding(12)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .cardShadow()
+            .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+            .fieldBorder()
         }
     }
 
@@ -287,6 +246,7 @@ struct TaskEditorView: View {
                 Circle()
                     .fill(color.foregroundColor)
                     .frame(width: 20, height: 20)
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
                     .overlay {
                         if newTagColorIndex == color.rawValue {
                             Image(systemName: "checkmark")
@@ -307,7 +267,6 @@ struct TaskEditorView: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("期日")
             VStack(spacing: 0) {
-                // Toggle row - due date
                 HStack {
                     Text("期日を設定")
                         .font(.callout)
@@ -322,7 +281,6 @@ struct TaskEditorView: View {
                 if hasDueDate {
                     Divider().padding(.horizontal, 12)
 
-                    // Date row
                     HStack(spacing: 12) {
                         Button {
                             showCalendar.toggle()
@@ -349,7 +307,6 @@ struct TaskEditorView: View {
 
                     Divider().padding(.horizontal, 12)
 
-                    // Toggle row - time
                     HStack {
                         Text("時刻を設定")
                             .font(.callout)
@@ -364,7 +321,6 @@ struct TaskEditorView: View {
                     if hasDueTime {
                         Divider().padding(.horizontal, 12)
 
-                        // Time input row
                         HStack(alignment: .center, spacing: 4) {
                             Image(systemName: "clock")
                                 .foregroundStyle(.secondary)
@@ -411,9 +367,8 @@ struct TaskEditorView: View {
                 }
 
             }
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .cardShadow()
+            .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+            .fieldBorder()
         }
     }
 
@@ -445,7 +400,6 @@ struct TaskEditorView: View {
         Text(text)
             .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(Color(red: 113/255, green: 119/255, blue: 134/255))
-            .tracking(0.6)
             .padding(.horizontal, 4)
     }
 
@@ -476,7 +430,6 @@ struct TaskEditorView: View {
         let dueForSave: Date?
         if hasDueDate {
             if hasDueTime {
-                // Apply time
                 let h = Int(hourString) ?? 9
                 let m = Int(minuteString) ?? 0
                 var components = Calendar.current.dateComponents([.year, .month, .day], from: dueDate)
@@ -484,7 +437,6 @@ struct TaskEditorView: View {
                 components.minute = m
                 dueForSave = Calendar.current.date(from: components) ?? dueDate
             } else {
-                // startOfDay only
                 dueForSave = Calendar.current.startOfDay(for: dueDate)
             }
         } else {
@@ -503,7 +455,6 @@ struct TaskEditorView: View {
         switch mode {
         case .new:
             store.add(title: trimmed,
-                      priority: priority,
                       dueDate: dueForSave,
                       notes: notesForSave,
                       urlString: urlForSave,
@@ -512,7 +463,6 @@ struct TaskEditorView: View {
         case .edit(let item):
             store.update(item,
                          title: trimmed,
-                         priority: priority,
                          dueDate: Optional(dueForSave),
                          notes: Optional(notesForSave),
                          urlString: Optional(urlForSave),
@@ -533,30 +483,24 @@ struct TaskEditorView: View {
     }
 }
 
-// MARK: - Priority label
-
-private extension Priority {
-    var label: String {
-        switch self {
-        case .high: return "高"
-        case .medium: return "中"
-        case .low: return "低"
-        }
-    }
-}
-
 // MARK: - Card shadow
 
 private extension View {
-    func cardShadow() -> some View {
-        shadow(color: .black.opacity(0.08), radius: 20, x: 0, y: 10)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(
-                        Color(red: 193/255, green: 198/255, blue: 215/255).opacity(0.3),
-                        lineWidth: 1
-                    )
-            )
+    func fieldBorder() -> some View {
+        overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(hex: 0xecedf3), lineWidth: 1)
+        )
+    }
+}
+
+private extension Color {
+    init(hex: Int) {
+        self.init(
+            red:   Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8)  & 0xFF) / 255,
+            blue:  Double( hex        & 0xFF) / 255
+        )
     }
 }
 
@@ -602,8 +546,8 @@ struct FlowLayout: Layout {
             }
             positions.append(CGPoint(x: x, y: y))
             rowHeight = max(rowHeight, size.height)
+            maxX = max(maxX, x + size.width)
             x += size.width + spacing
-            maxX = max(maxX, x)
         }
 
         return ArrangeResult(

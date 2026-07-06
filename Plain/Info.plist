@@ -8,6 +8,8 @@
 	<string>FvGGhK9xugm5idTp5xteOzoh8ZwOl7Er0p+O9LuxhhQ=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Plain のタスクを Apple リマインダーと同期し、iPhone からも操作できるようにするために使用します。</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

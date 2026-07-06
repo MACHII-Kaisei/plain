@@ -17,7 +17,7 @@ enum CSVExporter {
 
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
-        var csv = "タイトル,優先度,期日,時刻,完了,タグ,メモ,URL,作成日\n"
+        var csv = "タイトル,期日,時刻,完了,タグ,メモ,URL,作成日\n"
 
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ja_JP")
@@ -33,13 +33,6 @@ enum CSVExporter {
 
         for item in items {
             let title = escapeCSV(item.title)
-            let priority: String
-            switch item.priority {
-            case .high:   priority = "高"
-            case .medium: priority = "中"
-            case .low:    priority = "低"
-            }
-
             let dueDate: String
             let dueTime: String
             if let due = item.dueDate {
@@ -56,7 +49,7 @@ enum CSVExporter {
             let urlString = escapeCSV(item.urlString ?? "")
             let createdAt = createdAtFormatter.string(from: item.createdAt)
 
-            csv += "\(title),\(priority),\(dueDate),\(dueTime),\(completed),\(escapeCSV(tags)),\(notes),\(urlString),\(createdAt)\n"
+            csv += "\(title),\(dueDate),\(dueTime),\(completed),\(escapeCSV(tags)),\(notes),\(urlString),\(createdAt)\n"
         }
 
         try? csv.write(to: url, atomically: true, encoding: .utf8)

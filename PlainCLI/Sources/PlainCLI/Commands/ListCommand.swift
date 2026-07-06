@@ -15,10 +15,7 @@ struct ListCommand: ParsableCommand {
     @Option(name: .long, help: "タグで絞り込み（複数指定可）")
     var tag: [String] = []
 
-    @Option(name: .shortAndLong, help: "優先度で絞り込み: high(h), medium(m), low(l)")
-    var priority: String?
-
-    @Option(name: .shortAndLong, help: "並び替え: dueDate, priority, createdAt, title")
+    @Option(name: .shortAndLong, help: "並び替え: dueDate, createdAt, title")
     var sort: String?
 
     @Flag(name: .shortAndLong, help: "JSON形式で出力")
@@ -72,11 +69,6 @@ struct ListCommand: ParsableCommand {
     private func applySortAndFilter(_ items: [TodoItem]) -> [TodoItem] {
         var result = items
 
-        // Filter by priority
-        if let priority, let pri = PriorityParser.parse(priority) {
-            result = result.filter { $0.priority == pri }
-        }
-
         // Filter by tag
         if !tag.isEmpty {
             result = result.filter { item in
@@ -95,7 +87,7 @@ struct ListCommand: ParsableCommand {
     }
 
     private func printGroupedOrTable(_ items: [TodoItem]) {
-        if filter == nil && tag.isEmpty && priority == nil {
+        if filter == nil && tag.isEmpty {
             printGrouped(items)
         } else {
             printTable(items)
@@ -107,14 +99,13 @@ struct ListCommand: ParsableCommand {
             print("  タスクはありません")
             return
         }
-        print("  ID       優先度  期日              タイトル")
+        print("  ID       期日              タイトル")
         for item in items {
             let id = OutputFormatter.shortID(item.id)
-            let pri = PriorityParser.label(item.priority)
             let due = OutputFormatter.formatDate(item.dueDate)
             let title = item.title
             let tagSuffix = item.tags.isEmpty ? "" : " [\(item.tags.map(\.name).joined(separator: ", "))]"
-            print("  \(id)   \(pri)     \(due.padding(toLength: 12, withPad: " ", startingAt: 0))    \(title)\(tagSuffix)")
+            print("  \(id)   \(due.padding(toLength: 12, withPad: " ", startingAt: 0))    \(title)\(tagSuffix)")
         }
     }
 
@@ -149,7 +140,6 @@ struct ListCommand: ParsableCommand {
                 "id": item.id.uuidString,
                 "shortId": OutputFormatter.shortID(item.id),
                 "title": item.title,
-                "priority": priorityString(item.priority),
                 "isCompleted": item.isCompleted,
                 "section": TaskClassifier.classify(item: item).rawValue,
             ]
@@ -170,11 +160,4 @@ struct ListCommand: ParsableCommand {
         }
     }
 
-    private func priorityString(_ p: Priority) -> String {
-        switch p {
-        case .high: return "high"
-        case .medium: return "medium"
-        case .low: return "low"
-        }
-    }
 }

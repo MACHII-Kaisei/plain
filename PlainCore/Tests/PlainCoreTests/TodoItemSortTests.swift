@@ -15,16 +15,15 @@ func sortByDueDateAscendingWithNilLast() {
 }
 
 @Test
-func sortByPriorityWhenSameDueDate() {
+func sortByCreatedAtWhenSameDueDate() {
     let due = date(2026, 4, 17)
-    let items = [
-        TodoItem(title: "A", priority: .low, dueDate: due),
-        TodoItem(title: "B", priority: .high, dueDate: due),
-        TodoItem(title: "C", priority: .medium, dueDate: due),
-    ]
+    let older = TodoItem(title: "A", dueDate: due)
+    older.createdAt = date(2026, 4, 15)
+    let newer = TodoItem(title: "B", dueDate: due)
+    newer.createdAt = date(2026, 4, 16)
 
-    let sortedTitles = items.sorted(by: TodoItemSort.compareActive).map(\.title)
-    #expect(sortedTitles == ["B", "C", "A"])
+    let sortedTitles = [newer, older].sorted(by: TodoItemSort.compareActive).map(\.title)
+    #expect(sortedTitles == ["A", "B"])
 }
 
 @Test

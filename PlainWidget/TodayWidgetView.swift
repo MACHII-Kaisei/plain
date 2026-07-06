@@ -7,21 +7,35 @@ struct TodayWidgetView: View {
     let entry: TodayEntry
     @Environment(\.widgetFamily) private var family
 
-    private var rowSlots: Int { family == .systemLarge ? 8 : 3 }
-    private var rowHeight: CGFloat { family == .systemLarge ? 30 : 32 }
-    private let rowSpacing: CGFloat = 6
+    private var rowSlots: Int {
+        switch family {
+        case .systemLarge: 7
+        case .systemSmall: 2
+        default: 3
+        }
+    }
+
+    private var rowHeight: CGFloat { family == .systemSmall ? 28 : 30 }
+    private var rowSpacing: CGFloat { family == .systemSmall ? 5 : 6 }
+    private var horizontalPadding: CGFloat { family == .systemSmall ? 12 : 16 }
+    private var topPadding: CGFloat { family == .systemLarge ? 22 : 14 }
+    private var bottomPadding: CGFloat { family == .systemLarge ? 18 : 12 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            widgetHeader(title: "TODO", count: entry.todoItems.count)
+            Link(destination: URL(string: "plain://open")!) {
+                widgetHeader(title: "TODO", count: entry.todoItems.count)
+            }
+            .buttonStyle(.plain)
             .padding(.bottom, 8)
 
-            taskList(entry.todoItems, slots: rowSlots)
+            taskList(entry.todoItems, slots: rowSlots, message: entry.message)
 
             Spacer(minLength: 0)
         }
-        .padding(18)
-        .widgetURL(URL(string: "plain://open")!)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.top, topPadding)
+        .padding(.bottom, bottomPadding)
         .containerBackground(for: .widget) { Color.white }
     }
 
@@ -33,11 +47,11 @@ struct TodayWidgetView: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Color(hex: 0x0058bc))
             Text(title)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: family == .systemSmall ? 12 : 14, weight: .medium))
                 .foregroundStyle(Color(hex: 0x181c23))
             Spacer()
             Text("\(count)件")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: family == .systemSmall ? 11 : 12, weight: .medium))
                 .foregroundStyle(Color(hex: 0x717786))
         }
     }
@@ -45,14 +59,14 @@ struct TodayWidgetView: View {
     // MARK: - Task list
 
     @ViewBuilder
-    private func taskList(_ items: [TodoItem.Snapshot], slots: Int) -> some View {
+    private func taskList(_ items: [WidgetTodoItemSnapshot], slots: Int, message: String?) -> some View {
         let visibleLimit = items.count > slots ? max(slots - 1, 0) : slots
         let visibleItems = Array(items.prefix(visibleLimit))
         let hiddenCount = max(items.count - visibleItems.count, 0)
         let fixedHeight = CGFloat(slots) * rowHeight + CGFloat(max(slots - 1, 0)) * rowSpacing
 
         if items.isEmpty {
-            Text("タスクなし")
+            Text(message ?? "タスクなし")
                 .font(.system(size: 13))
                 .foregroundStyle(Color(hex: 0x717786))
                 .frame(maxWidth: .infinity, minHeight: fixedHeight, maxHeight: fixedHeight, alignment: .topLeading)
@@ -73,7 +87,7 @@ struct TodayWidgetView: View {
 
     // MARK: - Task row
 
-    private func taskRow(_ item: TodoItem.Snapshot) -> some View {
+    private func taskRow(_ item: WidgetTodoItemSnapshot) -> some View {
         let isUrgent = isDueTodayOrOverdue(item)
 
         return HStack(alignment: .center, spacing: 9) {
@@ -85,6 +99,8 @@ struct TodayWidgetView: View {
                             ? Color(hex: 0x0058bc)
                             : isUrgent ? Color(hex: 0xd92d20) : Color(hex: 0xc1c6d7)
                     )
+                    .frame(width: rowHeight, height: rowHeight)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(item.isCompleted ? "完了済み" : "未完了")
@@ -93,7 +109,7 @@ struct TodayWidgetView: View {
                 HStack(spacing: 5) {
                     Link(destination: URL(string: "plain://task/\(item.id.uuidString)")!) {
                         Text(item.title)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: family == .systemSmall ? 12 : 13, weight: .semibold))
                             .foregroundStyle(
                                 item.isCompleted
                                     ? Color(hex: 0x717786)
@@ -110,7 +126,8 @@ struct TodayWidgetView: View {
                         .layoutPriority(2)
                 }
 
-                if let notes = item.notes?.trimmingCharacters(in: .whitespacesAndNewlines),
+                if family != .systemSmall,
+                   let notes = item.notes?.trimmingCharacters(in: .whitespacesAndNewlines),
                    !notes.isEmpty {
                     Text(notes)
                         .font(.system(size: 10))
@@ -124,10 +141,10 @@ struct TodayWidgetView: View {
     }
 
     @ViewBuilder
-    private func inlineMeta(_ item: TodoItem.Snapshot) -> some View {
+    private func inlineMeta(_ item: WidgetTodoItemSnapshot) -> some View {
         if item.dueDate != nil || !item.tags.isEmpty {
             HStack(spacing: 4) {
-                ForEach(item.tags) { tag in
+                ForEach(item.tags.prefix(family == .systemSmall ? 1 : 3)) { tag in
                     tagChip(tag)
                 }
                 if let due = item.dueDate {
@@ -139,7 +156,7 @@ struct TodayWidgetView: View {
         }
     }
 
-    private func tagChip(_ tag: TodoItem.TagSnapshot) -> some View {
+    private func tagChip(_ tag: WidgetTagSnapshot) -> some View {
         let color = TagColor.from(index: tag.colorIndex)
         return Text(tag.name)
             .font(.system(size: 10, weight: .medium))
@@ -151,7 +168,7 @@ struct TodayWidgetView: View {
             .background(color.backgroundColor, in: Capsule())
     }
 
-    private func dueBadge(item: TodoItem.Snapshot, due: Date, now: Date) -> some View {
+    private func dueBadge(item: WidgetTodoItemSnapshot, due: Date, now: Date) -> some View {
         let state = dueState(due: due, hasDueTime: item.hasDueTime, now: now)
         return Text(state.label)
             .font(.system(size: 10, weight: .semibold))
@@ -172,7 +189,7 @@ struct TodayWidgetView: View {
         .frame(height: rowHeight)
     }
 
-    private func isDueTodayOrOverdue(_ item: TodoItem.Snapshot) -> Bool {
+    private func isDueTodayOrOverdue(_ item: WidgetTodoItemSnapshot) -> Bool {
         guard let due = item.dueDate else { return false }
         return due.startOfDay <= entry.date.startOfDay
     }

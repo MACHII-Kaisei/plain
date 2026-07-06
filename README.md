@@ -59,6 +59,7 @@ Xcode を入れたくない人向け。Widget が不安定な場合がありま�
 
 - 今日 / 明日のタスク管理
 - タグ・フィルタ・並び替え・一括操作
+- Apple リマインダーとの双方向同期（オプトイン。iPhone の純正リマインダーから閲覧・追加・完了できる。タグは同期対象外）
 - Interactive Widget（Today / Large）
 - メニューバーアプリ
 - CLI ツール `plain`（`PlainCLI` ターゲット）

@@ -18,46 +18,45 @@ struct TagManagerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             HStack {
                 Text("タグ管理")
-                    .font(.headline)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x181c23))
                 Spacer()
                 Button { dismiss() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                        .font(.title3)
+                    Image(systemName: "xmark")
+                        .foregroundStyle(Color(hex: 0x717786))
+                        .font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(.plain)
             }
             .padding(16)
 
-            Divider()
-
-            // Tag list
             if tags.isEmpty && !isAddingNew {
                 VStack(spacing: 12) {
                     Image(systemName: "tag")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.tertiary)
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundStyle(Color(hex: 0x0058bc))
                     Text("タグがありません")
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0x181c23))
+                    Text("タグを作るとタスクを分類しやすくなります。")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color(hex: 0x717786))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 0) {
+                    LazyVStack(spacing: 8) {
                         ForEach(tags) { tag in
                             tagRow(tag)
-                            Divider().padding(.horizontal, 16)
                         }
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
                 }
             }
 
-            Divider()
-
-            // Add new tag
             if isAddingNew {
                 newTagForm
             } else {
@@ -67,15 +66,15 @@ struct TagManagerView: View {
                     newTagColorIndex = 5
                 } label: {
                     Label("新規タグ", systemImage: "plus")
-                        .font(.callout)
+                        .font(.system(size: 13, weight: .semibold))
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(Color.accentColor)
-                .padding(12)
+                .foregroundStyle(Color(hex: 0x0058bc))
+                .padding(.vertical, 12)
             }
         }
         .frame(width: 400, height: 480)
-        .background(Color(red: 249/255, green: 249/255, blue: 255/255))
+        .background(Color(hex: 0xf7f8fb))
         .alert("タグを削除", isPresented: Binding(
             get: { tagToDelete != nil },
             set: { if !$0 { tagToDelete = nil } }
@@ -101,30 +100,28 @@ struct TagManagerView: View {
 
     private func tagRow(_ tag: Tag) -> some View {
         HStack(spacing: 12) {
-            Circle()
-                .fill(TagColor.from(index: tag.colorIndex).foregroundColor)
-                .frame(width: 10, height: 10)
-            Text(tag.name)
-                .font(.callout)
+            tagChip(tag)
             Text("\(tag.items.count)件")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color(hex: 0x717786))
             Spacer()
             Button { editingTag = tag; editName = tag.name; editColorIndex = tag.colorIndex } label: {
                 Image(systemName: "pencil")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12, weight: .medium))
             }
             .buttonStyle(.plain)
+            .foregroundStyle(Color(hex: 0x717786))
             Button { tagToDelete = tag } label: {
                 Image(systemName: "trash")
-                    .font(.caption)
-                    .foregroundStyle(.red.opacity(0.7))
+                    .font(.system(size: 12, weight: .medium))
             }
             .buttonStyle(.plain)
+            .foregroundStyle(Color(hex: 0xc64f00))
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: 0xecedf3), lineWidth: 1))
     }
 
     // MARK: - New tag form
@@ -136,8 +133,8 @@ struct TagManagerView: View {
                     .textFieldStyle(.plain)
                     .font(.callout)
                     .padding(8)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: 0xecedf3), lineWidth: 1))
             }
             colorGrid(selection: $newTagColorIndex)
             HStack {
@@ -156,6 +153,7 @@ struct TagManagerView: View {
             }
         }
         .padding(12)
+        .background(Color.white)
     }
 
     // MARK: - Edit tag sheet
@@ -163,7 +161,7 @@ struct TagManagerView: View {
     private func editTagSheet(_ tag: Tag) -> some View {
         VStack(spacing: 16) {
             Text("タグを編集")
-                .font(.headline)
+                .font(.system(size: 15, weight: .semibold))
             TextField("タグ名", text: $editName)
                 .textFieldStyle(.roundedBorder)
             colorGrid(selection: $editColorIndex)
@@ -183,6 +181,7 @@ struct TagManagerView: View {
         }
         .padding(24)
         .frame(width: 320)
+        .background(Color(hex: 0xf7f8fb))
     }
 
     // MARK: - Color grid
@@ -193,6 +192,8 @@ struct TagManagerView: View {
                 Circle()
                     .fill(color.foregroundColor)
                     .frame(width: 24, height: 24)
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                    .shadow(color: color.foregroundColor.opacity(0.25), radius: 3, y: 1)
                     .overlay {
                         if selection.wrappedValue == color.rawValue {
                             Image(systemName: "checkmark")
@@ -206,7 +207,26 @@ struct TagManagerView: View {
             }
         }
     }
+
+    private func tagChip(_ tag: Tag) -> some View {
+        let color = TagColor.from(index: tag.colorIndex)
+        return Text(tag.name)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(color.foregroundColor)
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.backgroundColor, in: Capsule())
+    }
 }
 
-
+private extension Color {
+    init(hex: Int) {
+        self.init(
+            red:   Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8)  & 0xFF) / 255,
+            blue:  Double( hex        & 0xFF) / 255
+        )
+    }
+}
 

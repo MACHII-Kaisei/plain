@@ -6,5 +6,11 @@
 	<array>
 		<string>A965XW5879.group.app.plain.Plain</string>
 	</array>
+	<key>com.apple.security.personal-information.calendars</key>
+	<true/>
+	<key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
+	<array>
+		<string>/Users/machiikaisei/Library/Containers/app.plain.Plain.PlainWidget/Data/Library/Application Support/</string>
+	</array>
 </dict>
 </plist>

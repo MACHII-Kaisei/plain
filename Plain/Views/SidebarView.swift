@@ -3,11 +3,10 @@ import SwiftData
 import PlainCore
 
 enum SidebarItem: String, Hashable, CaseIterable {
-    case today, thisWeek, upcoming, completed
+    case thisWeek, upcoming, completed
 
     var title: String {
         switch self {
-        case .today: "今日"
         case .thisWeek: "今週"
         case .upcoming: "これから"
         case .completed: "完了済み"
@@ -16,7 +15,6 @@ enum SidebarItem: String, Hashable, CaseIterable {
 
     var systemImage: String {
         switch self {
-        case .today: "sun.max"
         case .thisWeek: "calendar.badge.clock"
         case .upcoming: "tray.full"
         case .completed: "checkmark.circle"
@@ -72,8 +70,6 @@ struct SidebarView: View {
     private func count(for item: SidebarItem) -> Int {
         let now = Date()
         switch item {
-        case .today:
-            return activeItems.filter { TaskClassifier.classify(item: $0, now: now) == .today }.count
         case .thisWeek:
             return activeItems.filter { Self.isThisWeek($0.dueDate, now: now) }.count
         case .upcoming:

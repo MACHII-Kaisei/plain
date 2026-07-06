@@ -18,9 +18,6 @@ struct AddCommand: ParsableCommand {
     @Option(name: [.customShort("t"), .long], help: "時刻: HH:mm（デフォルト 09:00）")
     var at: String?
 
-    @Option(name: .shortAndLong, help: "優先度: high(h), medium(m), low(l)")
-    var priority: String?
-
     @Option(name: .shortAndLong, help: "メモ")
     var note: String?
 
@@ -35,11 +32,9 @@ struct AddCommand: ParsableCommand {
         let context = ModelContext(container)
 
         let dueDate = DateParser.parse(due: due, at: at)
-        let pri = priority.flatMap { PriorityParser.parse($0) } ?? .medium
 
         let item = TodoItem(
             title: title,
-            priority: pri,
             dueDate: dueDate,
             notes: note,
             urlString: url,
@@ -67,9 +62,7 @@ struct AddCommand: ParsableCommand {
         let id = OutputFormatter.shortID(item.id)
         print("✓ 追加: \(title) (\(id))")
         if let dueDate {
-            print("  期日: \(OutputFormatter.formatDate(dueDate)) | 優先度: \(PriorityParser.label(pri))")
-        } else {
-            print("  優先度: \(PriorityParser.label(pri))")
+            print("  期日: \(OutputFormatter.formatDate(dueDate))")
         }
         if !tag.isEmpty {
             print("  タグ: \(tag.joined(separator: ", "))")

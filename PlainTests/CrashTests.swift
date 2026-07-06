@@ -14,7 +14,7 @@ struct CrashTests {
         let context = container.mainContext
 
         for i in 1...100 {
-            store.add(title: "タスク \(i)", priority: [.low, .medium, .high][i % 3], dueDate: i % 3 == 0 ? Date() : nil)
+            store.add(title: "タスク \(i)", dueDate: i % 3 == 0 ? Date() : nil)
         }
 
         let items = try context.fetch(FetchDescriptor<TodoItem>())
@@ -47,10 +47,10 @@ struct CrashTests {
         let tomorrow = cal.date(byAdding: .day, value: 1, to: today)!
         let yesterday = cal.date(byAdding: .day, value: -1, to: today)!
 
-        store.add(title: "期日なし", priority: .high, dueDate: nil)
-        store.add(title: "明日", priority: .low, dueDate: tomorrow)
-        store.add(title: "昨日", priority: .medium, dueDate: yesterday)
-        store.add(title: "今日", priority: .high, dueDate: today)
+        store.add(title: "期日なし", dueDate: nil)
+        store.add(title: "明日", dueDate: tomorrow)
+        store.add(title: "昨日", dueDate: yesterday)
+        store.add(title: "今日", dueDate: today)
 
         let context = container.mainContext
         let all = try context.fetch(FetchDescriptor<TodoItem>())

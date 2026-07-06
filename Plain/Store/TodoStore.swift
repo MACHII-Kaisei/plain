@@ -20,21 +20,28 @@ public final class TodoStore {
         } catch {
             print("[TodoStore] save failed: \(error)")
             NotificationCenter.default.post(name: .plainSaveError, object: error)
+            return
         }
+
+        do {
+            try SharedWidgetSnapshotStore.write(from: container)
+        } catch {
+            print("[TodoStore] widget snapshot update failed: \(error)")
+        }
+
+        NotificationCenter.default.post(name: .plainDataDidChange, object: nil)
     }
 
     // MARK: - CRUD
 
     @discardableResult
     public func add(title: String,
-                    priority: Priority = .medium,
                     dueDate: Date? = nil,
                     notes: String? = nil,
                     urlString: String? = nil,
                     hasDueTime: Bool = false,
                     tags: [Tag] = []) -> TodoItem {
         let item = TodoItem(title: title,
-                            priority: priority,
                             dueDate: dueDate,
                             notes: notes,
                             urlString: urlString,
@@ -48,14 +55,12 @@ public final class TodoStore {
 
     public func update(_ item: TodoItem,
                        title: String? = nil,
-                       priority: Priority? = nil,
                        dueDate: Date?? = nil,
                        notes: String?? = nil,
                        urlString: String?? = nil,
                        hasDueTime: Bool? = nil,
                        tags: [Tag]? = nil) {
         if let title { item.title = title }
-        if let priority { item.priority = priority }
         if let dueDate { item.dueDate = dueDate }
         if let notes { item.notes = notes }
         if let urlString { item.urlString = urlString }
@@ -83,7 +88,6 @@ public final class TodoStore {
     @discardableResult
     public func duplicate(_ item: TodoItem) -> TodoItem {
         let copy = TodoItem(title: item.title + " (コピー)",
-                            priority: item.priority,
                             dueDate: item.dueDate,
                             notes: item.notes,
                             urlString: item.urlString,
@@ -142,6 +146,7 @@ public final class TodoStore {
         let tag = Tag(name: name, colorIndex: colorIndex)
         context.insert(tag)
         save()
+        WidgetCenter.shared.reloadAllTimelines()
         return tag
     }
 
@@ -149,11 +154,13 @@ public final class TodoStore {
         if let name { tag.name = name }
         if let colorIndex { tag.colorIndex = colorIndex }
         save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     public func deleteTag(_ tag: Tag) {
         context.delete(tag)
         save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     public func fetchAllTags() -> [Tag] {
