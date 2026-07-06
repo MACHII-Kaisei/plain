@@ -119,6 +119,32 @@ public enum SharedWidgetSnapshotStore {
         throw lastError ?? CocoaError(.fileNoSuchFile)
     }
 
+    /// キャッシュ内の該当タスクの完了状態を書き換えた新しいキャッシュを返す(純粋関数)。
+    public static func applyingCompletion(
+        to cache: WidgetSnapshotCache, taskID: UUID, isCompleted: Bool, now: Date
+    ) -> WidgetSnapshotCache {
+        let items = cache.todoItems.map { item -> WidgetTodoItemSnapshot in
+            guard item.id == taskID else { return item }
+            return WidgetTodoItemSnapshot(
+                id: item.id,
+                title: item.title,
+                notes: item.notes,
+                dueDate: item.dueDate,
+                isCompleted: isCompleted,
+                hasDueTime: item.hasDueTime,
+                tags: item.tags
+            )
+        }
+        return WidgetSnapshotCache(generatedAt: now, todoItems: items)
+    }
+
+    /// ウィジェット側の楽観的更新: 表示中スナップショットの該当タスクだけ書き換えて保存する。
+    /// DB を更新できない環境でも、タップ直後にチェック状態を表示へ反映するために使う。
+    public static func applyLocalCompletion(taskID: UUID, isCompleted: Bool, now: Date = Date()) throws {
+        let cache = try load()
+        try write(applyingCompletion(to: cache, taskID: taskID, isCompleted: isCompleted, now: now))
+    }
+
     private static func readableCacheURLs() -> [URL] {
         uniqueURLs([
             widgetExtensionApplicationSupportURL(),

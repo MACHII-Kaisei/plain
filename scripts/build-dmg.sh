@@ -112,7 +112,7 @@ APP_ENT="$BUILD_DIR/_app.entitlements"
 if [[ "$SIGNING_MODE" == "adhoc" ]]; then
   # ad-hoc: Sparkle.framework の Hardened Runtime ライブラリ検証で Team ID 不一致と
   # 扱われるため disable-library-validation を入れる。
-  cat > "$APP_ENT" <<'PLIST'
+  cat > "$APP_ENT" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -127,6 +127,10 @@ if [[ "$SIGNING_MODE" == "adhoc" ]]; then
     <true/>
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
+    <key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
+    <array>
+        <string>${HOME}/Library/Containers/app.plain.Plain.PlainWidget/Data/Library/Application Support/</string>
+    </array>
 </dict>
 </plist>
 PLIST

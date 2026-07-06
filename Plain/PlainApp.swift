@@ -21,6 +21,7 @@ extension Notification.Name {
 struct PlainApp: App {
     let container: ModelContainer
     @State private var syncCoordinator: ReminderSyncCoordinator?
+    @State private var widgetActionCoordinator: WidgetActionCoordinator?
     private let updaterController = SPUStandardUpdaterController(
         startingUpdater: true,
         updaterDelegate: nil,
@@ -35,6 +36,9 @@ struct PlainApp: App {
                 container = try SharedContainer.makeInMemoryContainer()
             } else {
                 container = try SharedContainer.makeSharedContainer()
+                // ウィジェットが書き残したペンディング操作を先に DB へ反映してから
+                // スナップショットを書き出す（逆順だと完了操作が巻き戻って見える）
+                WidgetActionStore().applyPendingActions(context: ModelContext(container))
                 try? SharedWidgetSnapshotStore.write(from: container)
                 WidgetCenter.shared.reloadAllTimelines()
             }
@@ -68,6 +72,13 @@ struct PlainApp: App {
                     let coordinator = ReminderSyncCoordinator(container: container)
                     coordinator.start()
                     syncCoordinator = coordinator
+                }
+                .task {
+                    guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil,
+                          widgetActionCoordinator == nil else { return }
+                    let coordinator = WidgetActionCoordinator(container: container)
+                    coordinator.start()
+                    widgetActionCoordinator = coordinator
                 }
         }
         .modelContainer(container)
