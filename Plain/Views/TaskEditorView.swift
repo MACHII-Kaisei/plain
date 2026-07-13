@@ -275,16 +275,19 @@ struct TaskEditorView: View {
                     Text("期日を設定")
                         .font(.callout)
                     Spacer()
-                    Toggle("", isOn: $hasDueDate.animation())
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .onChange(of: hasDueDate) { _, newValue in
+                    Toggle("", isOn: Binding(
+                        get: { hasDueDate },
+                        set: { newValue in
+                            withAnimation { hasDueDate = newValue }
                             if !newValue {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     expandedPicker = nil
                                 }
                             }
                         }
+                    ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -316,10 +319,10 @@ struct TaskEditorView: View {
                         Text("時刻を設定")
                             .font(.callout)
                         Spacer()
-                        Toggle("", isOn: $hasDueTime.animation())
-                            .labelsHidden()
-                            .toggleStyle(.switch)
-                            .onChange(of: hasDueTime) { _, newValue in
+                        Toggle("", isOn: Binding(
+                            get: { hasDueTime },
+                            set: { newValue in
+                                withAnimation { hasDueTime = newValue }
                                 if newValue {
                                     dueHour = 9
                                     dueMinute = 0
@@ -332,6 +335,9 @@ struct TaskEditorView: View {
                                     }
                                 }
                             }
+                        ))
+                            .labelsHidden()
+                            .toggleStyle(.switch)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
