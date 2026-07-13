@@ -365,7 +365,13 @@ struct TaskEditorView: View {
                         .padding(.vertical, 12)
 
                         if expandedPicker == .time {
-                            WheelTimePicker(hour: $dueHour, minute: $dueMinute)
+                            TimeListPicker(hour: $dueHour, minute: $dueMinute) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    expandedPicker = nil
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.bottom, 12)
                         }
                     }
                 }
