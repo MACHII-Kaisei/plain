@@ -243,7 +243,8 @@ struct TaskEditorView: View {
                     .foregroundStyle(Color.accentColor)
                 }
             }
-            .padding(12)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
             .fieldBorder()
         }
