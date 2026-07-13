@@ -26,6 +26,7 @@ struct SidebarView: View {
     @Binding var selection: SidebarItem
     @Query(filter: #Predicate<TodoItem> { !$0.isCompleted }) private var activeItems: [TodoItem]
     @Query(filter: #Predicate<TodoItem> { $0.isCompleted }) private var completedItems: [TodoItem]
+    @AppStorage("completedRetentionDays") private var retentionDays: Int = 0
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
@@ -75,7 +76,10 @@ struct SidebarView: View {
         case .upcoming:
             return activeItems.count
         case .completed:
-            return completedItems.count
+            // リスト側（TaskListView）の表示期間フィルタと件数を一致させる
+            guard retentionDays > 0 else { return completedItems.count }
+            let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: now)!
+            return completedItems.filter { ($0.completedAt ?? .distantPast) > cutoff }.count
         }
     }
 }

@@ -203,13 +203,18 @@ private struct MainListView: View {
         self.onNew = onNew
         self.onEdit = onEdit
 
-        let retentionDays = UserDefaults.standard.object(forKey: "completedRetentionDays") as? Int ?? 7
+        // 0 以下 = すべて表示（期間フィルタなし）
+        let retentionDays = UserDefaults.standard.object(forKey: "completedRetentionDays") as? Int ?? 0
         if sidebarSelection == .completed {
-            let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date())!
-            let distantPast = Date.distantPast
-            _items = Query(filter: #Predicate<TodoItem> {
-                $0.isCompleted && ($0.completedAt ?? distantPast) > cutoff
-            })
+            if retentionDays <= 0 {
+                _items = Query(filter: #Predicate<TodoItem> { $0.isCompleted })
+            } else {
+                let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date())!
+                let distantPast = Date.distantPast
+                _items = Query(filter: #Predicate<TodoItem> {
+                    $0.isCompleted && ($0.completedAt ?? distantPast) > cutoff
+                })
+            }
         } else {
             _items = Query(filter: #Predicate<TodoItem> { !$0.isCompleted })
         }
