@@ -8,6 +8,10 @@ struct TaskEditorView: View {
         case edit(TodoItem)
     }
 
+    enum ExpandedPicker {
+        case date, time
+    }
+
     let mode: Mode
     let onClose: () -> Void
 
@@ -16,9 +20,9 @@ struct TaskEditorView: View {
     @State private var hasDueDate: Bool = false
     @State private var dueDate: Date = Self.todayStart()
     @State private var hasDueTime: Bool = false
-    @State private var hourString: String = "09"
-    @State private var minuteString: String = "00"
-    @State private var showCalendar: Bool = false
+    @State private var dueHour: Int = 9
+    @State private var dueMinute: Int = 0
+    @State private var expandedPicker: ExpandedPicker?
     @State private var notes: String = ""
     @State private var urlString: String = ""
     @State private var selectedTagIDs: Set<UUID> = []
@@ -54,11 +58,11 @@ struct TaskEditorView: View {
             }
             if hasDueTime {
                 let (h, m) = Self.splitTime(dueDate)
-                hourString = h
-                minuteString = m
+                dueHour = h
+                dueMinute = m
             } else {
-                hourString = "09"
-                minuteString = "00"
+                dueHour = 9
+                dueMinute = 0
             }
             titleFocused = true
         }
@@ -274,6 +278,13 @@ struct TaskEditorView: View {
                     Toggle("", isOn: $hasDueDate.animation())
                         .labelsHidden()
                         .toggleStyle(.switch)
+                        .onChange(of: hasDueDate) { _, newValue in
+                            if !newValue {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    expandedPicker = nil
+                                }
+                            }
+                        }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -281,29 +292,23 @@ struct TaskEditorView: View {
                 if hasDueDate {
                     Divider().padding(.horizontal, 12)
 
-                    HStack(spacing: 12) {
-                        Button {
-                            showCalendar.toggle()
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "calendar")
-                                    .foregroundStyle(.secondary)
-                                    .font(.callout)
-                                Text(formattedDate)
-                                    .font(.callout)
-                                    .foregroundStyle(.primary)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .sheet(isPresented: $showCalendar) {
-                            calendarPopover
-                        }
-
+                    HStack {
+                        Text("日付")
+                            .font(.callout)
                         Spacer()
+                        pickerChip(formattedDate, isActive: expandedPicker == .date) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                expandedPicker = expandedPicker == .date ? nil : .date
+                            }
+                        }
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
+
+                    if expandedPicker == .date {
+                        CalendarMonthView(selectedDate: $dueDate)
+                            .padding(12)
+                    }
 
                     Divider().padding(.horizontal, 12)
 
@@ -314,6 +319,19 @@ struct TaskEditorView: View {
                         Toggle("", isOn: $hasDueTime.animation())
                             .labelsHidden()
                             .toggleStyle(.switch)
+                            .onChange(of: hasDueTime) { _, newValue in
+                                if newValue {
+                                    dueHour = 9
+                                    dueMinute = 0
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        expandedPicker = .time
+                                    }
+                                } else if expandedPicker == .time {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        expandedPicker = nil
+                                    }
+                                }
+                            }
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -321,48 +339,22 @@ struct TaskEditorView: View {
                     if hasDueTime {
                         Divider().padding(.horizontal, 12)
 
-                        HStack(alignment: .center, spacing: 4) {
-                            Image(systemName: "clock")
-                                .foregroundStyle(.secondary)
+                        HStack {
+                            Text("時刻")
                                 .font(.callout)
-                                .frame(width: 16, height: 20)
-                            TextField("09", text: $hourString)
-                                .textFieldStyle(.plain)
-                                .font(.callout.monospacedDigit())
-                                .multilineTextAlignment(.center)
-                                .frame(width: 24, height: 20)
-                                .onChange(of: hourString) { _, v in
-                                    let digits = v.filter(\.isNumber)
-                                    let clamped: String
-                                    if let n = Int(digits) {
-                                        clamped = String(format: "%02d", min(n, 23))
-                                    } else {
-                                        clamped = digits.isEmpty ? "" : digits
-                                    }
-                                    if clamped != hourString { hourString = clamped }
+                            Spacer()
+                            pickerChip(formattedTime, isActive: expandedPicker == .time) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    expandedPicker = expandedPicker == .time ? nil : .time
                                 }
-                            Text(":")
-                                .font(.callout.monospacedDigit())
-                                .foregroundStyle(.primary)
-                                .frame(height: 20)
-                            TextField("00", text: $minuteString)
-                                .textFieldStyle(.plain)
-                                .font(.callout.monospacedDigit())
-                                .multilineTextAlignment(.center)
-                                .frame(width: 24, height: 20)
-                                .onChange(of: minuteString) { _, v in
-                                    let digits = v.filter(\.isNumber)
-                                    let clamped: String
-                                    if let n = Int(digits) {
-                                        clamped = String(format: "%02d", min(n, 59))
-                                    } else {
-                                        clamped = digits.isEmpty ? "" : digits
-                                    }
-                                    if clamped != minuteString { minuteString = clamped }
-                                }
+                            }
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
+
+                        if expandedPicker == .time {
+                            WheelTimePicker(hour: $dueHour, minute: $dueMinute)
+                        }
                     }
                 }
 
@@ -372,25 +364,18 @@ struct TaskEditorView: View {
         }
     }
 
-    private var calendarPopover: some View {
-        VStack(spacing: 16) {
-            Text("期日を選択")
-                .font(.headline)
-            DatePicker("", selection: $dueDate, displayedComponents: .date)
-                .datePickerStyle(.graphical)
-                .frame(width: 360)
-            Divider()
-            HStack {
-                Spacer()
-                Button("完了") {
-                    showCalendar = false
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-            }
+    private func pickerChip(_ text: String, isActive: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(text)
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(isActive ? Color.accentColor : .primary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(red: 238/255, green: 241/255, blue: 246/255),
+                            in: RoundedRectangle(cornerRadius: 7))
+                .contentShape(Rectangle())
         }
-        .padding(24)
-        .frame(width: 420)
+        .buttonStyle(.plain)
     }
 
     // MARK: - Helpers
@@ -405,15 +390,18 @@ struct TaskEditorView: View {
 
     private var formattedDate: String {
         let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .none
         f.locale = Locale(identifier: "ja_JP")
+        f.dateFormat = "yyyy年M月d日(E)"
         return f.string(from: dueDate)
     }
 
-    private static func splitTime(_ date: Date) -> (String, String) {
+    private var formattedTime: String {
+        String(format: "%02d:%02d", dueHour, dueMinute)
+    }
+
+    private static func splitTime(_ date: Date) -> (Int, Int) {
         let c = Calendar.current.dateComponents([.hour, .minute], from: date)
-        return (String(format: "%02d", c.hour ?? 9), String(format: "%02d", c.minute ?? 0))
+        return (c.hour ?? 9, c.minute ?? 0)
     }
 
     private var isEdit: Bool {
@@ -430,11 +418,9 @@ struct TaskEditorView: View {
         let dueForSave: Date?
         if hasDueDate {
             if hasDueTime {
-                let h = Int(hourString) ?? 9
-                let m = Int(minuteString) ?? 0
                 var components = Calendar.current.dateComponents([.year, .month, .day], from: dueDate)
-                components.hour = h
-                components.minute = m
+                components.hour = dueHour
+                components.minute = dueMinute
                 dueForSave = Calendar.current.date(from: components) ?? dueDate
             } else {
                 dueForSave = Calendar.current.startOfDay(for: dueDate)
