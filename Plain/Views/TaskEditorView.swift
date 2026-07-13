@@ -85,7 +85,7 @@ struct TaskEditorView: View {
                 .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .background(Color.white)
     }
 
@@ -93,7 +93,7 @@ struct TaskEditorView: View {
 
     private var contentArea: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField("タイトルを入力", text: $title)
                         .font(.system(size: 22, weight: .semibold))
@@ -103,13 +103,17 @@ struct TaskEditorView: View {
                         .onSubmit { save() }
                     Divider()
                 }
+                .padding(.bottom, 4)
 
                 VStack(alignment: .leading, spacing: 8) {
                     sectionLabel("メモ")
                     TextEditor(text: $notes)
-                        .frame(height: 90)
+                        .font(.system(size: 13))
+                        .scrollContentBackground(.hidden)
+                        .contentMargins(8, for: .scrollContent)
                         .scrollIndicators(.hidden)
-                        .padding(12)
+                        .frame(height: 96)
+                        .padding(4)
                         .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
                         .fieldBorder()
                 }
@@ -125,7 +129,8 @@ struct TaskEditorView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(28)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 28)
         }
         .scrollContentBackground(.hidden)
     }
@@ -144,8 +149,8 @@ struct TaskEditorView: View {
                     .font(.callout)
                     .textContentType(.URL)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
             .fieldBorder()
         }
@@ -289,8 +294,8 @@ struct TaskEditorView: View {
                         .labelsHidden()
                         .toggleStyle(.switch)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
 
                 if hasDueDate {
                     Divider().padding(.horizontal, 12)
@@ -305,8 +310,8 @@ struct TaskEditorView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
 
                     if expandedPicker == .date {
                         CalendarMonthView(selectedDate: $dueDate)
@@ -339,8 +344,8 @@ struct TaskEditorView: View {
                             .labelsHidden()
                             .toggleStyle(.switch)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
 
                     if hasDueTime {
                         Divider().padding(.horizontal, 12)
@@ -355,8 +360,8 @@ struct TaskEditorView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
 
                         if expandedPicker == .time {
                             WheelTimePicker(hour: $dueHour, minute: $dueMinute)
