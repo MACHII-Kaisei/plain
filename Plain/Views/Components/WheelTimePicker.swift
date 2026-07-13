@@ -19,7 +19,7 @@ struct WheelTimePicker: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(red: 238/255, green: 241/255, blue: 246/255))
+                .fill(Color(hex: 0xeef1f6))
                 .frame(height: rowHeight + 6)
 
             HStack(spacing: 0) {
@@ -42,6 +42,14 @@ private struct WheelColumn: View {
     let visibleHeight: CGFloat
 
     @State private var scrolledID: Int?
+
+    init(values: [Int], selection: Binding<Int>, rowHeight: CGFloat, visibleHeight: CGFloat) {
+        self.values = values
+        self._selection = selection
+        self.rowHeight = rowHeight
+        self.visibleHeight = visibleHeight
+        self._scrolledID = State(initialValue: selection.wrappedValue)
+    }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -74,6 +82,16 @@ private struct WheelColumn: View {
         .onChange(of: selection) { _, newValue in
             if scrolledID != newValue { scrolledID = newValue }
         }
+    }
+}
+
+private extension Color {
+    init(hex: Int) {
+        self.init(
+            red:   Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8)  & 0xFF) / 255,
+            blue:  Double( hex        & 0xFF) / 255
+        )
     }
 }
 
