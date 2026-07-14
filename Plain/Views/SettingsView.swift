@@ -3,7 +3,7 @@ import EventKit
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("completedRetentionDays") private var retentionDays: Int = 7
+    @AppStorage("completedRetentionDays") private var retentionDays: Int = 0
     @AppStorage(ReminderSyncSettings.enabledKey) private var reminderSyncEnabled = false
     @State private var authStatus = EKEventStore.authorizationStatus(for: .reminder)
     @State private var lastSuccessAt: Date?
@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var isRefreshing = false
 
     private let retentionPresets: [(days: Int, label: String)] = [
+        (0,   "すべて"),
         (3,   "3日間"),
         (7,   "1週間"),
         (14,  "2週間"),

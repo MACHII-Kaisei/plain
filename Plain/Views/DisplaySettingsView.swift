@@ -2,11 +2,12 @@ import SwiftUI
 
 struct DisplaySettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("completedRetentionDays") private var retentionDays: Int = 7
+    @AppStorage("completedRetentionDays") private var retentionDays: Int = 0
     @AppStorage("showNotesInRow") private var showNotesInRow: Bool = true
     @AppStorage("showTagsInRow") private var showTagsInRow: Bool = true
 
     private let retentionOptions: [(days: Int, label: String)] = [
+        (0,  "すべて"),
         (3,  "3日"),
         (7,  "7日"),
         (14, "14日"),
