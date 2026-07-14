@@ -88,6 +88,10 @@ public enum SharedWidgetSnapshotStore {
     }
 
     public static func write(from container: ModelContainer, now: Date = Date()) throws {
+        // インメモリコンテナ（ユニットテスト・UIテスト）の内容を実際の App Group の
+        // スナップショットへ書き出すと、ユーザーのウィジェット表示をテストデータで
+        // 上書きしてしまうためスキップする
+        guard !container.configurations.contains(where: \.isStoredInMemoryOnly) else { return }
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<TodoItem>(predicate: #Predicate { !$0.isCompleted })
         let items = try context.fetch(descriptor)
