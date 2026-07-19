@@ -18,6 +18,7 @@ xcuserdata/
 # Docs (specs は非公開、ユーザー向け文書のみ公開)
 docs/*
 !docs/install.md
+!docs/images/
 
 # Local hooks (machine-specific paths)
 .github/hooks/
