@@ -125,6 +125,8 @@ if [[ "$SIGNING_MODE" == "adhoc" ]]; then
     </array>
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
+    <key>com.apple.security.personal-information.calendars</key>
+    <true/>
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
     <key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
@@ -148,6 +150,8 @@ else
         <string>A965XW5879.group.app.plain.Plain</string>
     </array>
     <key>com.apple.security.files.user-selected.read-only</key>
+    <true/>
+    <key>com.apple.security.personal-information.calendars</key>
     <true/>
 </dict>
 </plist>
